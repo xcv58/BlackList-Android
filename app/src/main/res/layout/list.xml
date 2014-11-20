@@ -31,4 +31,14 @@
         android:text="com.package.name"
         android:textSize="32px" >
     </TextView>
+    <CheckBox
+        android:id="@+id/check"
+        android:layout_width="128px"
+        android:layout_height="128px"
+        android:layout_marginLeft="8px"
+        android:layout_marginRight="8px"
+        android:layout_alignParentRight="true"
+        android:focusable="false"
+        android:clickable="false" >
+    </CheckBox>
 </RelativeLayout>
