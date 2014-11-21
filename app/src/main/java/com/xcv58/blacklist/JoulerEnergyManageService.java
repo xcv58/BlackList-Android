@@ -1,10 +1,14 @@
 package com.xcv58.blacklist;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,9 +32,20 @@ public class JoulerEnergyManageService extends Service {
 
     private HashMap<String, Integer> listMap;
 
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Toast.makeText(context, intent.getAction(), Toast.LENGTH_SHORT).show();
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_RESUME_ACTIVITY);
+        intentFilter.addAction(Intent.ACTION_PAUSE_ACTIVITY);
+        registerReceiver(broadcastReceiver, intentFilter);
         Log.d(TAG, "onCreate() executed");
     }
 
