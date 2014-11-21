@@ -6,6 +6,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
+import java.io.StreamCorruptedException;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -14,6 +22,7 @@ import java.util.Random;
  */
 public class JoulerEnergyManageService extends Service {
     public static final String TAG = "JoulerEnergyManageService";
+    public static final String LIST_MAP = "LIST_MAP";
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -66,6 +75,34 @@ public class JoulerEnergyManageService extends Service {
         return;
     }
 
+    public HashMap<String, Integer> readListMap() {
+        try {
+            FileInputStream fis = openFileInput(LIST_MAP);
+            ObjectInputStream is = new ObjectInputStream(fis);
+            HashMap<String, Integer> map = (HashMap<String, Integer>) is.readObject();
+            is.close();
+            return map;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HashMap<String, Integer>();
+    }
+
+
+    public boolean flush() {
+//  write listMap to file
+        try {
+            FileOutputStream fos = openFileOutput(LIST_MAP, MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos);
+            os.writeObject(listMap);
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
     public class LocalBinder extends Binder {
         JoulerEnergyManageService getService() {
             // Return this instance of LocalService so clients can call public methods
@@ -75,7 +112,7 @@ public class JoulerEnergyManageService extends Service {
 
     private void initMap() {
         if (this.listMap == null) {
-            listMap = new HashMap<String, Integer>();
+            listMap = this.readListMap();
         }
     }
 }

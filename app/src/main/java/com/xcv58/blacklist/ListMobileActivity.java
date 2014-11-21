@@ -58,6 +58,7 @@ public class ListMobileActivity extends ListActivity {
 
         Intent intent = new Intent(this, JoulerEnergyManageService.class);
         Log.d(TAG, "bind service");
+        startService(intent);
         bindService(intent, mConnection, this.BIND_AUTO_CREATE);
 
         PackageManager packageManager = getPackageManager();
@@ -87,5 +88,23 @@ public class ListMobileActivity extends ListActivity {
         mService.select(selectedPackage.getPackageName());
         mobileArrayAdapter.notifyDataSetChanged();
         return;
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "on Pause");
+        mService.flush();
+        super.onPause();
+        return;
+    }
+
+    @Override
+    protected void onStop() {
+        Log.d(TAG, "on Stop");
+        super.onStop();
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
     }
 }

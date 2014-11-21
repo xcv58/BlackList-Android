@@ -16,9 +16,9 @@
     <TextView
         android:id="@+id/name"
         android:layout_toRightOf="@+id/logo"
+        android:layout_toLeftOf="@+id/check"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
         android:text="App Name"
         android:textSize="64px" >
     </TextView>
@@ -27,6 +27,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/logo"
+        android:layout_toLeftOf="@+id/check"
         android:layout_below="@+id/name"
         android:text="com.package.name"
         android:textSize="32px" >
