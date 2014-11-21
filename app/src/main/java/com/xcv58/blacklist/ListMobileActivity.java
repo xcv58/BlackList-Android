@@ -18,6 +18,7 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,6 +43,7 @@ public class ListMobileActivity extends ListActivity {
             for (MyPackageInfo myPackageInfo : filteredList) {
                 myPackageInfo.setService(mService);
             }
+            Collections.sort(filteredList);
             mobileArrayAdapter.notifyDataSetChanged();
             Log.d(TAG, "bind service successful");
         }
@@ -71,7 +73,7 @@ public class ListMobileActivity extends ListActivity {
                 //System app
             }
             if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-                filteredList.add(new MyPackageInfo(packageInfo, mService));
+                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
             }
         }
         Log.d(TAG, "end establish list");
