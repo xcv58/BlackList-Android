@@ -69,11 +69,13 @@ public class ListMobileActivity extends ListActivity {
         for (PackageInfo packageInfo : list) {
             if (packageInfo.applicationInfo.sourceDir.startsWith("/data/app/")) {
                 //Non-system app
+                Log.d(TAG, packageInfo.applicationInfo.sourceDir);
+                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
             } else {
                 //System app
             }
             if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
+//                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
             }
         }
         Log.d(TAG, "end establish list");

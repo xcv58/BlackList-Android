@@ -48,7 +48,7 @@ public class MobileArrayAdapter extends ArrayAdapter<MyPackageInfo> {
         textView_label.setText(myPackageInfo.getPackageName());
 
         if (myPackageInfo.inList()) {
-            rowView.setBackgroundColor(Color.RED);
+            rowView.setBackgroundColor(0xFFAA66CC);
             checkBox.setChecked(true);
         }
 
