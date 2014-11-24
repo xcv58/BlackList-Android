@@ -4,19 +4,14 @@ import android.app.ListActivity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +23,7 @@ import java.util.List;
  */
 public class ListMobileActivity extends ListActivity {
     private final static String TAG = "blackList";
-    private JoulerEnergyManageService mService;
+    private JoulerEnergyManageServiceBlackList mService;
     private boolean mBound = false;
     private List<MyPackageInfo> filteredList;
     private MobileArrayAdapter mobileArrayAdapter;
@@ -40,7 +35,7 @@ public class ListMobileActivity extends ListActivity {
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             Log.d(TAG, "ServiceConnection");
-            JoulerEnergyManageService.LocalBinder binder = (JoulerEnergyManageService.LocalBinder) service;
+            JoulerEnergyManageServiceBlackList.LocalBinder binder = (JoulerEnergyManageServiceBlackList.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
             for (MyPackageInfo myPackageInfo : filteredList) {
@@ -60,7 +55,7 @@ public class ListMobileActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        joulerEnergyManageServiceIntent = new Intent(this, JoulerEnergyManageService.class);
+        joulerEnergyManageServiceIntent = new Intent(this, JoulerEnergyManageServiceBlackList.class);
         startService(joulerEnergyManageServiceIntent);
     }
 

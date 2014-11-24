@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
         
-        <service android:name=".JoulerEnergyManageService"
+        <service android:name=".JoulerEnergyManageServiceBlackList"
             android:enabled="true" />
     </application>
 

@@ -10,7 +10,7 @@ import android.graphics.drawable.Drawable;
  * Created by xcv58 on 11/20/14.
  */
 public class MyPackageInfo implements Comparable<MyPackageInfo> {
-    private JoulerEnergyManageService joulerEnergyManageService;
+    private JoulerEnergyManageServiceBlackList joulerEnergyManageServiceBlackList;
     private String appName = null;
     private String packageName = null;
     private Drawable icon = null;
@@ -41,8 +41,8 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
         return appName;
     }
 
-    public void setService(JoulerEnergyManageService joulerEnergyManageService) {
-        this.joulerEnergyManageService = joulerEnergyManageService;
+    public void setService(JoulerEnergyManageServiceBlackList joulerEnergyManageServiceBlackList) {
+        this.joulerEnergyManageServiceBlackList = joulerEnergyManageServiceBlackList;
         return;
     }
 
@@ -55,17 +55,17 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
     }
 
     public boolean inList() {
-        if (joulerEnergyManageService == null) {
+        if (joulerEnergyManageServiceBlackList == null) {
             return false;
         }
-        return joulerEnergyManageService.inList(this.getPackageName());
+        return joulerEnergyManageServiceBlackList.inList(this.getPackageName());
     }
 
 
     @Override
     public int compareTo(MyPackageInfo otherPackage) {
-        if (otherPackage.joulerEnergyManageService != null || this.joulerEnergyManageService != null) {
-            JoulerEnergyManageService tmpService = this.joulerEnergyManageService != null ? this.joulerEnergyManageService : otherPackage.joulerEnergyManageService;
+        if (otherPackage.joulerEnergyManageServiceBlackList != null || this.joulerEnergyManageServiceBlackList != null) {
+            JoulerEnergyManageServiceBlackList tmpService = this.joulerEnergyManageServiceBlackList != null ? this.joulerEnergyManageServiceBlackList : otherPackage.joulerEnergyManageServiceBlackList;
             boolean thisInList = tmpService.inList(this.getPackageName());
             if (thisInList ^ tmpService.inList(otherPackage.getPackageName())) {
                 return thisInList ? -1 : 1;

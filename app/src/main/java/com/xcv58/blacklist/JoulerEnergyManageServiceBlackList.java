@@ -27,8 +27,8 @@ import android.os.RemoteException;
 /**
  * Created by xcv58 on 11/20/14.
  */
-public class JoulerEnergyManageService extends Service {
-    public static final String TAG = "JoulerEnergyManageService";
+public class JoulerEnergyManageServiceBlackList extends Service {
+    public static final String TAG = "JoulerEnergyManageServiceBlackList";
     public static final String LIST_MAP = "LIST_MAP";
     public static final String PACKAGE = "Package";
     public static final String USERID = "UserId";
@@ -241,9 +241,9 @@ public class JoulerEnergyManageService extends Service {
     }
 
     public class LocalBinder extends Binder {
-        JoulerEnergyManageService getService() {
+        JoulerEnergyManageServiceBlackList getService() {
             // Return this instance of LocalService so clients can call public methods
-            return JoulerEnergyManageService.this;
+            return JoulerEnergyManageServiceBlackList.this;
         }
     }
 
