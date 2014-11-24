@@ -36,8 +36,8 @@ public class JoulerEnergyManageService extends Service {
     private int previousBrightness;
     private int previousBrightnessMode;
 
-    private JoulerPolicy joulerPolicy;
-    private JoulerStats joulerStats;
+//    private JoulerPolicy joulerPolicy;
+//    private JoulerStats joulerStats;
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -63,63 +63,63 @@ public class JoulerEnergyManageService extends Service {
             } else if (intent.getAction() == Intent.ACTION_PAUSE_ACTIVITY && inList(packageName)) {
                 resetBrightness();
             }
-            Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
+//            Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
         }
     };
 
-    private void print() {
-        Log.d(TAG, "START PRINT");
-        try {
-            byte[] bytes = joulerPolicy.getStatistics();
-            Parcel parcel = Parcel.obtain();
-            parcel.unmarshall(bytes, 0, bytes.length);
-            parcel.setDataPosition(0); // this is extremely important!
-            JoulerStats joulerStats = new JoulerStats(parcel);
-            Log.d(TAG, "SIZE: " + joulerStats.mUidArray.size());
-            for( int i = 0; i < joulerStats.mUidArray.size(); i++){
-                UidStats u = joulerStats.mUidArray.valueAt(i);
-                Log.i(TAG, "Uid: "+u.getUid()+" Pkg: "+u.packageName);
-                Log.i(TAG, "Uid: "+u.getUid()+"Fg= "+u.getFgEnergy()+" Bg= "+u.getBgEnergy()+" Cpu= "+u.getCpuEnergy()+" Wakelock= "+u.getWakelockEnergy()+" Wifi= "+u.getWifiEnergy()
-                        + " Mobile Data= "+u.getMobileDataEnergy()+" Wifi Data= "+u.getWifiDataEnergy()+" Video= "+u.getVideoEnergy());
-                Log.i(TAG, "Uid: "+u.getUid()+" Frames= "+u.getFrame()+" Launches= "+u.getCount()+" Usage= "+u.getUsageTime());
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-        Log.d(TAG, "END PRINT");
-    }
-
-    private double getEnergy(int uid) {
-        try {
-            byte[] bytes = joulerPolicy.getStatistics();
-            Parcel parcel = Parcel.obtain();
-            parcel.unmarshall(bytes, 0, bytes.length);
-            parcel.setDataPosition(0); // this is extremely important!
-            JoulerStats joulerStats = new JoulerStats(parcel);
-            for( int i = 0; i < joulerStats.mUidArray.size(); i++){
-                UidStats u = joulerStats.mUidArray.valueAt(i);
-                if (u.getUid() == uid) {
-                    return u.getFgEnergy() + u.getBgEnergy();
-                }
+//    private void print() {
+//        Log.d(TAG, "START PRINT");
+//        try {
+//            byte[] bytes = joulerPolicy.getStatistics();
+//            Parcel parcel = Parcel.obtain();
+//            parcel.unmarshall(bytes, 0, bytes.length);
+//            parcel.setDataPosition(0); // this is extremely important!
+//            JoulerStats joulerStats = new JoulerStats(parcel);
+//            Log.d(TAG, "SIZE: " + joulerStats.mUidArray.size());
+//            for( int i = 0; i < joulerStats.mUidArray.size(); i++){
+//                UidStats u = joulerStats.mUidArray.valueAt(i);
 //                Log.i(TAG, "Uid: "+u.getUid()+" Pkg: "+u.packageName);
 //                Log.i(TAG, "Uid: "+u.getUid()+"Fg= "+u.getFgEnergy()+" Bg= "+u.getBgEnergy()+" Cpu= "+u.getCpuEnergy()+" Wakelock= "+u.getWakelockEnergy()+" Wifi= "+u.getWifiEnergy()
 //                        + " Mobile Data= "+u.getMobileDataEnergy()+" Wifi Data= "+u.getWifiDataEnergy()+" Video= "+u.getVideoEnergy());
 //                Log.i(TAG, "Uid: "+u.getUid()+" Frames= "+u.getFrame()+" Launches= "+u.getCount()+" Usage= "+u.getUsageTime());
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-        return -1.0;
-    }
+//            }
+//        } catch (RemoteException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Log.d(TAG, "END PRINT");
+//    }
+
+//    private double getEnergy(int uid) {
+//        try {
+//            byte[] bytes = joulerPolicy.getStatistics();
+//            Parcel parcel = Parcel.obtain();
+//            parcel.unmarshall(bytes, 0, bytes.length);
+//            parcel.setDataPosition(0); // this is extremely important!
+//            JoulerStats joulerStats = new JoulerStats(parcel);
+//            for( int i = 0; i < joulerStats.mUidArray.size(); i++){
+//                UidStats u = joulerStats.mUidArray.valueAt(i);
+//                if (u.getUid() == uid) {
+//                    return u.getFgEnergy() + u.getBgEnergy();
+//                }
+////                Log.i(TAG, "Uid: "+u.getUid()+" Pkg: "+u.packageName);
+////                Log.i(TAG, "Uid: "+u.getUid()+"Fg= "+u.getFgEnergy()+" Bg= "+u.getBgEnergy()+" Cpu= "+u.getCpuEnergy()+" Wakelock= "+u.getWakelockEnergy()+" Wifi= "+u.getWifiEnergy()
+////                        + " Mobile Data= "+u.getMobileDataEnergy()+" Wifi Data= "+u.getWifiDataEnergy()+" Video= "+u.getVideoEnergy());
+////                Log.i(TAG, "Uid: "+u.getUid()+" Frames= "+u.getFrame()+" Launches= "+u.getCount()+" Usage= "+u.getUsageTime());
+//            }
+//        } catch (RemoteException e) {
+//            e.printStackTrace();
+//        }
+//        return -1.0;
+//    }
 
 
     private void saveMode(int uid) {
         int brightness = 1;
         Log.d(TAG, "Enable saveMode, brightness: " + brightness);
         setBrightness(brightness);
-        joulerPolicy.setScreenBrightness(1);
-        joulerPolicy.resetPriority(uid, 20);
+//        joulerPolicy.setScreenBrightness(1);
+//        joulerPolicy.resetPriority(uid, 20);
     }
 
 
@@ -164,8 +164,8 @@ public class JoulerEnergyManageService extends Service {
         registerReceiver(broadcastReceiver, intentFilter);
 
         Log.d(TAG, "get JoulerPolicy");
-        joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
-        joulerStats = new JoulerStats();
+//        joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
+//        joulerStats = new JoulerStats();
 
         Log.d(TAG, "onCreate() executed");
     }
