@@ -58,8 +58,8 @@ public class ListMobileActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startService(joulerEnergyManageServiceIntent);
         joulerEnergyManageServiceIntent = new Intent(this, JoulerEnergyManageService.class);
+        startService(joulerEnergyManageServiceIntent);
     }
 
     private List<MyPackageInfo> getFilteredList(List<PackageInfo> list) {
