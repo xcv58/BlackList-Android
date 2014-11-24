@@ -29,7 +29,7 @@ import android.os.RemoteException;
  */
 public class JoulerEnergyManageServiceBlackList extends Service {
     public static final String TAG = "JoulerEnergyManageServiceBlackList";
-    public static final String LIST_MAP = "LIST_MAP";
+    public static final String LIST_MAP = "BLACK_LIST_MAP";
     public static final String PACKAGE = "Package";
     public static final String USERID = "UserId";
 
