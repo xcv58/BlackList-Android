@@ -99,6 +99,10 @@ public class ListMobileActivity extends ListActivity {
         Log.d(TAG, "on Pause");
         mService.flush();
         super.onPause();
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
         return;
     }
 
@@ -106,9 +110,5 @@ public class ListMobileActivity extends ListActivity {
     protected void onStop() {
         Log.d(TAG, "on Stop");
         super.onStop();
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
     }
 }
