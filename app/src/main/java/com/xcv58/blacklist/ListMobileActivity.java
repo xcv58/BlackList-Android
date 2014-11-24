@@ -7,6 +7,7 @@ import android.content.ServiceConnection;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -66,14 +68,36 @@ public class ListMobileActivity extends ListActivity {
         List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
         String myPackageName = getPackageName();
         for (PackageInfo packageInfo : list) {
+//            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) == 0) {
+//                resultList.add(new MyPackageInfo(packageInfo, mService, this));
+//            }
             if (packageInfo.applicationInfo.sourceDir.startsWith("/data/app/")) {
-                //Non-system app
+//                Non-system app
                 Log.d(TAG, packageInfo.applicationInfo.sourceDir);
                 if (!packageInfo.packageName.equals(myPackageName)) {
                     resultList.add(new MyPackageInfo(packageInfo, mService, this));
                 }
             } else {
-                //System app
+//                System app
+            }
+        }
+        return resultList;
+    }
+
+    private List<MyPackageInfo> getFilteredList(List<ResolveInfo> list, PackageManager packageManager) {
+        List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
+        HashSet<String> set = new HashSet<String>();
+        String myPackageName = getPackageName();
+        for (ResolveInfo resolveInfo : list) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            if (!packageName.equals(myPackageName) && !set.contains(packageName)) {
+                try {
+                    PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+                    resultList.add(new MyPackageInfo(packageInfo, mService, this));
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+                set.add(resolveInfo.activityInfo.packageName);
             }
         }
         return resultList;
@@ -97,12 +121,15 @@ public class ListMobileActivity extends ListActivity {
         bindService(joulerEnergyManageServiceIntent, mConnection, this.BIND_AUTO_CREATE);
 
         Log.d(TAG, "onResume activity");
-        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));
+//        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));
+        PackageManager pm =  getPackageManager();
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        filteredList = getFilteredList(pm.queryIntentActivities(mainIntent, 0), pm);
 
         mobileArrayAdapter = new MobileArrayAdapter(this, filteredList);
         setListAdapter(mobileArrayAdapter);
         mobileArrayAdapter.notifyDataSetChanged();
-
         return;
     }
 
