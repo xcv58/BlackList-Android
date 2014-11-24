@@ -75,7 +75,7 @@ public class ListMobileActivity extends ListActivity {
 //                Non-system app
                 Log.d(TAG, packageInfo.applicationInfo.sourceDir);
                 if (!packageInfo.packageName.equals(myPackageName)) {
-                    resultList.add(new MyPackageInfo(packageInfo, mService, this));
+                    resultList.add(new MyPackageInfo(packageInfo, this));
                 }
             } else {
 //                System app
@@ -91,12 +91,7 @@ public class ListMobileActivity extends ListActivity {
         for (ResolveInfo resolveInfo : list) {
             String packageName = resolveInfo.activityInfo.packageName;
             if (!packageName.equals(myPackageName) && !set.contains(packageName)) {
-                try {
-                    PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-                    resultList.add(new MyPackageInfo(packageInfo, mService, this));
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
+                resultList.add(new MyPackageInfo(resolveInfo, this));
                 set.add(resolveInfo.activityInfo.packageName);
             }
         }

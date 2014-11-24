@@ -3,27 +3,38 @@ package com.xcv58.blacklist;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 
 /**
  * Created by xcv58 on 11/20/14.
  */
 public class MyPackageInfo implements Comparable<MyPackageInfo> {
-    private PackageInfo packageInfo;
     private JoulerEnergyManageService joulerEnergyManageService;
     private String appName = null;
+    private String packageName = null;
+    private Drawable icon = null;
 
-    public MyPackageInfo(PackageInfo packageInfo, JoulerEnergyManageService joulerEnergyManageService, Context context) {
-        this.packageInfo = packageInfo;
-        this.joulerEnergyManageService = joulerEnergyManageService;
-        this.getAppName(context);
+    public MyPackageInfo(PackageInfo packageInfo, Context context) {
+        PackageManager pm = context.getPackageManager();
+        appName = packageInfo.applicationInfo.loadLabel(pm).toString();
+        packageName = packageInfo.packageName;
+        this.initIcon(pm);
     }
 
-    public String getAppName(Context context) {
-        if (appName == null) {
-            appName = packageInfo.applicationInfo.loadLabel(context.getPackageManager()).toString();
+    public MyPackageInfo(ResolveInfo resolveInfo, Context context) {
+        PackageManager pm = context.getPackageManager();
+        appName = resolveInfo.activityInfo.applicationInfo.loadLabel(pm).toString();
+        packageName = resolveInfo.activityInfo.packageName;
+        this.initIcon(pm);
+    }
+
+    private void initIcon(PackageManager pm) {
+        try {
+            icon = pm.getApplicationIcon(getPackageName());
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
         }
-        return appName;
     }
 
     public String getAppName() {
@@ -36,7 +47,11 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
     }
 
     public String getPackageName() {
-        return packageInfo.packageName;
+        return packageName;
+    }
+
+    public Drawable getIcon() {
+        return icon;
     }
 
     public boolean inList() {
@@ -57,9 +72,5 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
             }
         }
         return (this.getAppName()).compareTo(otherPackage.getAppName());
-    }
-
-    public Drawable getIcon(PackageManager packageManager) throws PackageManager.NameNotFoundException {
-        return packageManager.getApplicationIcon(getPackageName());
     }
 }

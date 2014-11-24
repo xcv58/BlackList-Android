@@ -45,22 +45,18 @@ public class MobileArrayAdapter extends ArrayAdapter<MyPackageInfo> {
 
         // set one view
         MyPackageInfo myPackageInfo =  packageInfoList.get(position);
-        String name = myPackageInfo.getAppName(context);
-        textView_name.setText(name);
+
+        textView_name.setText(myPackageInfo.getAppName());
         textView_label.setText(myPackageInfo.getPackageName());
+
+        Drawable icon = myPackageInfo.getIcon();
+        imageView.setImageDrawable((icon != null) ? icon : context.getResources().getDrawable( R.drawable.ic_launcher ));
 
         if (myPackageInfo.inList()) {
             rowView.setBackgroundColor(0xFFAA66CC);
             checkBox.setChecked(true);
         }
 
-        try {
-            Drawable icon = myPackageInfo.getIcon(pm);
-            imageView.setImageDrawable(icon);
-        } catch (PackageManager.NameNotFoundException e) {
-            imageView.setImageResource(R.drawable.ic_launcher);
-            e.printStackTrace();
-        }
         return rowView;
     }
 }
