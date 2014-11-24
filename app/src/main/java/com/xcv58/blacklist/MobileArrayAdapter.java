@@ -22,11 +22,13 @@ import java.util.List;
 public class MobileArrayAdapter extends ArrayAdapter<MyPackageInfo> {
     private final Context context;
     private List<MyPackageInfo> packageInfoList;
+    private PackageManager pm;
 
     public MobileArrayAdapter(Context context, List<MyPackageInfo> packageInfoList) {
         super(context, R.layout.list, packageInfoList);
         this.context = context;
         this.packageInfoList = packageInfoList;
+        pm = context.getPackageManager();
     }
 
     @Override
@@ -53,7 +55,7 @@ public class MobileArrayAdapter extends ArrayAdapter<MyPackageInfo> {
         }
 
         try {
-            Drawable icon = getContext().getPackageManager().getApplicationIcon(myPackageInfo.getPackageName());
+            Drawable icon = myPackageInfo.getIcon(pm);
             imageView.setImageDrawable(icon);
         } catch (PackageManager.NameNotFoundException e) {
             imageView.setImageResource(R.drawable.ic_launcher);

@@ -2,6 +2,8 @@ package com.xcv58.blacklist;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 
 /**
  * Created by xcv58 on 11/20/14.
@@ -55,5 +57,9 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
             }
         }
         return (this.getAppName()).compareTo(otherPackage.getAppName());
+    }
+
+    public Drawable getIcon(PackageManager packageManager) throws PackageManager.NameNotFoundException {
+        return packageManager.getApplicationIcon(getPackageName());
     }
 }
