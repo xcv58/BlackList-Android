@@ -30,6 +30,7 @@ public class ListMobileActivity extends ListActivity {
     private boolean mBound = false;
     private List<MyPackageInfo> filteredList;
     private MobileArrayAdapter mobileArrayAdapter;
+    private Intent joulerEnergyManageServiceIntent;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -57,31 +58,25 @@ public class ListMobileActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startService(joulerEnergyManageServiceIntent);
+        joulerEnergyManageServiceIntent = new Intent(this, JoulerEnergyManageService.class);
+    }
 
-        Intent intent = new Intent(this, JoulerEnergyManageService.class);
-        Log.d(TAG, "bind service");
-        startService(intent);
-        bindService(intent, mConnection, this.BIND_AUTO_CREATE);
-
-        PackageManager packageManager = getPackageManager();
-        List<PackageInfo> list = packageManager.getInstalledPackages(0);
-        filteredList = new ArrayList<MyPackageInfo>();
+    private List<MyPackageInfo> getFilteredList(List<PackageInfo> list) {
+        List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
+        String myPackageName = getPackageName();
         for (PackageInfo packageInfo : list) {
             if (packageInfo.applicationInfo.sourceDir.startsWith("/data/app/")) {
                 //Non-system app
                 Log.d(TAG, packageInfo.applicationInfo.sourceDir);
-                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
+                if (!packageInfo.packageName.equals(myPackageName)) {
+                    resultList.add(new MyPackageInfo(packageInfo, mService, this));
+                }
             } else {
                 //System app
             }
-            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
-//                filteredList.add(new MyPackageInfo(packageInfo, mService, this));
-            }
         }
-        Log.d(TAG, "end establish list");
-        mobileArrayAdapter = new MobileArrayAdapter(this, filteredList);
-        setListAdapter(mobileArrayAdapter);
-        Log.d(TAG, "end onCreate");
+        return resultList;
     }
 
     @Override
@@ -91,6 +86,23 @@ public class ListMobileActivity extends ListActivity {
 //        Toast.makeText(this, selectedPackage.getAppName(this), Toast.LENGTH_SHORT).show();
         mService.select(selectedPackage.getPackageName());
         mobileArrayAdapter.notifyDataSetChanged();
+        return;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "bind service");
+
+        bindService(joulerEnergyManageServiceIntent, mConnection, this.BIND_AUTO_CREATE);
+
+        Log.d(TAG, "onResume activity");
+        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));
+
+        mobileArrayAdapter = new MobileArrayAdapter(this, filteredList);
+        setListAdapter(mobileArrayAdapter);
+        mobileArrayAdapter.notifyDataSetChanged();
+
         return;
     }
 
