@@ -1,4 +1,4 @@
-package com.xcv58.blacklist;
+package com.xcv58.joulerenergymanager;
 
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Created by xcv58 on 11/19/14.
  */
-public class ListMobileActivity extends ListActivity {
+public class BlackListActivity extends ListActivity {
     private final static String TAG = "blackList";
     private JoulerEnergyManageServiceBlackList mService;
     private boolean mBound = false;

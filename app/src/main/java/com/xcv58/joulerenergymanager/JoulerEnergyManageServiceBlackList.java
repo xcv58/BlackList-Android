@@ -1,4 +1,4 @@
-package com.xcv58.blacklist;
+package com.xcv58.joulerenergymanager;
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -195,6 +195,7 @@ public class JoulerEnergyManageServiceBlackList extends Service {
     }
 
     public boolean inList(String packageName) {
+        this.initMap();
         if (!listMap.containsKey(packageName)) {
             listMap.put(packageName, 0);
             return false;
@@ -203,6 +204,7 @@ public class JoulerEnergyManageServiceBlackList extends Service {
     }
 
     public void select(String packageName) {
+        this.initMap();
         Integer num = listMap.get(packageName);
         if (num == null || num == 0) {
             listMap.put(packageName, 1);

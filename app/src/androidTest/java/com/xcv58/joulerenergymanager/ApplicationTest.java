@@ -1,4 +1,4 @@
-package com.xcv58.blacklist;
+package com.xcv58.joulerenergymanager;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
