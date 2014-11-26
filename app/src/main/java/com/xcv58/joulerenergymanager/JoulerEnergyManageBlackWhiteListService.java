@@ -44,6 +44,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public static final int WHITE_LIST_INTENT = 2;
     public static final String whichList = "Which List";
 
+    public static final int LOW_BRIGHTNESS = 10;
     private int option;
     private String listMapLocation;
 
@@ -145,9 +146,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
 
     private void saveMode(int uid) {
-        int brightness = 1;
-        Log.d(TAG, "Enable saveMode, brightness: " + brightness);
-        setBrightness(brightness);
+        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
+        setBrightness(LOW_BRIGHTNESS);
         joulerPolicy.resetPriority(uid, 20);
     }
 
