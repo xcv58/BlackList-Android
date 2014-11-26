@@ -4,13 +4,19 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +34,7 @@ public class MainActivity extends Activity {
     private OptionsAdapter optionsAdapter;
     private List<MyOption> optionList;
     private Button button;
+    private TextView descriptionTextView;
     private JoulerEnergyManageDeamon mService;
     private boolean mBound;
     private Intent joulerenergyManageDeamonIntent;
@@ -85,6 +92,8 @@ public class MainActivity extends Activity {
             }
         });
 
+        descriptionTextView = (TextView) findViewById(R.id.description);
+        descriptionTextView.setMovementMethod(new ScrollingMovementMethod());
         button = (Button) findViewById(R.id.button);
     }
 

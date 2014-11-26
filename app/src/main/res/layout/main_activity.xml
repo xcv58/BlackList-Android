@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_alignParentBottom="true"
+    >
     <ListView
         android:id="@+id/policy_options"
-        android:scrollbars="none"
+        android:scrollbars="vertical"
         android:fadingEdge="vertical"
         android:soundEffectsEnabled="true"
         android:dividerHeight="1px"
         android:smoothScrollbar="true"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="666px"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="8px"
+        />
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawSelectorOnTop="false"
-        android:layout_weight=".5"/>
+        android:layout_below="@id/policy_options"
+        android:text="@string/description"
+        android:textSize="20sp"
+        android:maxLines="8"
+        android:scrollbars="vertical"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="8px"
+        />
     <Button
         android:id="@+id/button"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="128dp"
+        android:layout_below="@+id/description"
         android:text="@string/app_name"
+        android:textSize="24sp"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="8px"
         android:onClick="enterSetting"
-        android:layout_weight=".5" />
+        />
 </RelativeLayout>

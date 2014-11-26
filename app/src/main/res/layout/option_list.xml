@@ -8,6 +8,6 @@
         android:layout_height="wrap_content"
         android:padding="32px"
         android:text="App Name"
-        android:textSize="64px" >
+        android:textSize="24sp" >
     </TextView>
 </RelativeLayout>
