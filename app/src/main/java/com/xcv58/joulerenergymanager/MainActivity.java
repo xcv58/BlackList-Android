@@ -100,8 +100,18 @@ public class MainActivity extends Activity {
     private void changeButton(String option) {
         // call service to change policy
         button.setText(option);
-//        button.setClickable(!option.equals(DEFAULT));
-//        button.setVisibility((option.equals(DEFAULT)) ? View.INVISIBLE : View.VISIBLE);
+        if (option.equals(DEFAULT)) {
+            descriptionTextView.setText(R.string.description_default);
+        }
+        if (option.equals(BLACK_LIST)) {
+            descriptionTextView.setText(R.string.description_blacklist);
+        }
+        if (option.equals(WHITE_LIST)) {
+            descriptionTextView.setText(R.string.description_whitelist);
+        }
+        if (option.equals(LIFE_TIME)) {
+            descriptionTextView.setText(R.string.description_lifetime);
+        }
     }
 
     public void enterSetting(View v) {

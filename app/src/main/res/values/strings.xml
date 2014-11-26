@@ -7,5 +7,17 @@
     <string name="blacklist">Black List</string>
     <string name="whitelist">White List</string>
     <string name="description">This is the description!</string>
+    <string name="description_default">Default policy means do nothing.</string>
+    <string name="description_blacklist">
+        BlackList will provide an app list, you can choose multiple apps.
+        \nThe app you choosed will be punished to save energy.
+    </string>
+    <string name="description_whitelist">
+        WhiteList will provide an app list, you can choose multiple apps.
+        \nThe app you choosed will get full energy supply, other apps will get lower energy supply.
+    </string>
+    <string name="description_lifetime">
+        LifeTime description should be here.
+    </string>
 
 </resources>
