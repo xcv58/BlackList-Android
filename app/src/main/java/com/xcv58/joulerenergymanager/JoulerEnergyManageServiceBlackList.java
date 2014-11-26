@@ -118,7 +118,6 @@ public class JoulerEnergyManageServiceBlackList extends Service {
         int brightness = 1;
         Log.d(TAG, "Enable saveMode, brightness: " + brightness);
         setBrightness(brightness);
-        joulerPolicy.setScreenBrightness(1);
         joulerPolicy.resetPriority(uid, 20);
     }
 
