@@ -10,7 +10,7 @@ import android.graphics.drawable.Drawable;
  * Created by xcv58 on 11/20/14.
  */
 public class MyPackageInfo implements Comparable<MyPackageInfo> {
-    private JoulerEnergyManageServiceBlackList joulerEnergyManageServiceBlackList;
+    private JoulerEnergyManageBlackWhiteListService joulerEnergyManageBlackWhiteListService;
     private String appName = null;
     private String packageName = null;
     private Drawable icon = null;
@@ -41,8 +41,8 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
         return appName;
     }
 
-    public void setService(JoulerEnergyManageServiceBlackList joulerEnergyManageServiceBlackList) {
-        this.joulerEnergyManageServiceBlackList = joulerEnergyManageServiceBlackList;
+    public void setService(JoulerEnergyManageBlackWhiteListService joulerEnergyManageBlackWhiteListService) {
+        this.joulerEnergyManageBlackWhiteListService = joulerEnergyManageBlackWhiteListService;
         return;
     }
 
@@ -55,17 +55,17 @@ public class MyPackageInfo implements Comparable<MyPackageInfo> {
     }
 
     public boolean inList() {
-        if (joulerEnergyManageServiceBlackList == null) {
+        if (joulerEnergyManageBlackWhiteListService == null) {
             return false;
         }
-        return joulerEnergyManageServiceBlackList.inList(this.getPackageName());
+        return joulerEnergyManageBlackWhiteListService.inList(this.getPackageName());
     }
 
 
     @Override
     public int compareTo(MyPackageInfo otherPackage) {
-        if (otherPackage.joulerEnergyManageServiceBlackList != null || this.joulerEnergyManageServiceBlackList != null) {
-            JoulerEnergyManageServiceBlackList tmpService = this.joulerEnergyManageServiceBlackList != null ? this.joulerEnergyManageServiceBlackList : otherPackage.joulerEnergyManageServiceBlackList;
+        if (otherPackage.joulerEnergyManageBlackWhiteListService != null || this.joulerEnergyManageBlackWhiteListService != null) {
+            JoulerEnergyManageBlackWhiteListService tmpService = this.joulerEnergyManageBlackWhiteListService != null ? this.joulerEnergyManageBlackWhiteListService : otherPackage.joulerEnergyManageBlackWhiteListService;
             boolean thisInList = tmpService.inList(this.getPackageName());
             if (thisInList ^ tmpService.inList(otherPackage.getPackageName())) {
                 return thisInList ? -1 : 1;

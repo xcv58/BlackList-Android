@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BlackList.iml" filepath="$PROJECT_DIR$/BlackList.iml" />
+      <module fileurl="file://$PROJECT_DIR$/JoulerEnergyManager.iml" filepath="$PROJECT_DIR$/JoulerEnergyManager.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

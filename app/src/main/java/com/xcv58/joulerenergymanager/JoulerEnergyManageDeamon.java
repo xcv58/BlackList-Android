@@ -82,7 +82,7 @@ public class JoulerEnergyManageDeamon extends Service {
             // do nothing because default
         }
         if (mChoice.equals(MainActivity.BLACK_LIST)) {
-            stopService(new Intent(getBaseContext(), JoulerEnergyManageServiceBlackList.class));
+            stopService(new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class));
         }
         if (mChoice.equals(MainActivity.WHITE_LIST)) {
         }
@@ -93,9 +93,14 @@ public class JoulerEnergyManageDeamon extends Service {
     private void startServiceForChoice() {
         Log.d(MainActivity.TAG, "Start service: " + mChoice);
         if (mChoice.equals(MainActivity.BLACK_LIST)) {
-            startService(new Intent(getBaseContext(), JoulerEnergyManageServiceBlackList.class));
+            Intent intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
+            intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT);
+            startService(intent);
         }
         if (mChoice.equals(MainActivity.WHITE_LIST)) {
+            Intent intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
+            intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.WHITE_LIST_INTENT);
+            startService(intent);
         }
         if (mChoice.equals(MainActivity.LIFE_TIME)) {
         }

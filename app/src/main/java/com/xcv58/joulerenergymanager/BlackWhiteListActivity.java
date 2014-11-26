@@ -21,13 +21,15 @@ import java.util.List;
 /**
  * Created by xcv58 on 11/19/14.
  */
-public class BlackListActivity extends ListActivity {
-    private final static String TAG = "blackList";
-    private JoulerEnergyManageServiceBlackList mService;
+public class BlackWhiteListActivity extends ListActivity {
+    private final static String TAG = "JoulerEnergyManageListActivity";
+    private JoulerEnergyManageBlackWhiteListService mService;
     private boolean mBound = false;
     private List<MyPackageInfo> filteredList;
     private MobileArrayAdapter mobileArrayAdapter;
-    private Intent joulerEnergyManageServiceIntent;
+    private Intent blackWhiteListServiceIntent;
+
+    private static int option;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -35,7 +37,7 @@ public class BlackListActivity extends ListActivity {
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             Log.d(TAG, "ServiceConnection");
-            JoulerEnergyManageServiceBlackList.LocalBinder binder = (JoulerEnergyManageServiceBlackList.LocalBinder) service;
+            JoulerEnergyManageBlackWhiteListService.LocalBinder binder = (JoulerEnergyManageBlackWhiteListService.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
             for (MyPackageInfo myPackageInfo : filteredList) {
@@ -55,8 +57,13 @@ public class BlackListActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        joulerEnergyManageServiceIntent = new Intent(this, JoulerEnergyManageServiceBlackList.class);
-        startService(joulerEnergyManageServiceIntent);
+        option = getIntent().getExtras().getInt(JoulerEnergyManageBlackWhiteListService.whichList);
+        Log.d(TAG, "onCreate activity with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
+        setTitle(((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? R.string.blacklist : R.string.whitelist));
+
+        blackWhiteListServiceIntent = new Intent(this, JoulerEnergyManageBlackWhiteListService.class);
+        blackWhiteListServiceIntent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, option);
+        startService(blackWhiteListServiceIntent);
     }
 
     private List<MyPackageInfo> getFilteredList(List<PackageInfo> list) {
@@ -85,7 +92,7 @@ public class BlackListActivity extends ListActivity {
         String myPackageName = getPackageName();
         for (ResolveInfo resolveInfo : list) {
             String packageName = resolveInfo.activityInfo.packageName;
-            if (!packageName.equals(myPackageName) && !set.contains(packageName)) {
+            if (!packageName.equals(myPackageName) && !packageName.equals("com.google.android.googlequicksearchbox") && !set.contains(packageName)) {
                 resultList.add(new MyPackageInfo(resolveInfo, this));
                 set.add(resolveInfo.activityInfo.packageName);
             }
@@ -106,9 +113,8 @@ public class BlackListActivity extends ListActivity {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "bind service");
 
-        bindService(joulerEnergyManageServiceIntent, mConnection, this.BIND_AUTO_CREATE);
+        bindService(blackWhiteListServiceIntent, mConnection, this.BIND_AUTO_CREATE);
 
         Log.d(TAG, "onResume activity");
 //        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));

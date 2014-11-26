@@ -102,8 +102,11 @@ public class MainActivity extends Activity {
         Intent intent = null;
         if (option.equals(DEFAULT)) {
         } else if (option.equals(BLACK_LIST)) {
-            intent = new Intent(this, BlackListActivity.class);
+            intent = new Intent(this, BlackWhiteListActivity.class);
+            intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT);
         } else if (option.equals(WHITE_LIST)) {
+            intent = new Intent(this, BlackWhiteListActivity.class);
+            intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.WHITE_LIST_INTENT);
         } else if (option.equals(LIFE_TIME)) {
 
         } else {
