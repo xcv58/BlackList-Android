@@ -52,9 +52,9 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     public static final int LOW_BRIGHTNESS = 10;
     private static final String LEAVE_SAVE_MODE = "Leave save mode";
-    private static final String WHICH_LIST = "List mode";
-    private static final String BLACK = "Black";
-    private static final String WHITE = "White";
+    public static final String WHICH_LIST = "List mode";
+    public static final String BLACK = "Black";
+    public static final String WHITE = "White";
     private static final String ENERGY_DETAIL = "Energy detail";
     private int option;
     private String listMapLocation;

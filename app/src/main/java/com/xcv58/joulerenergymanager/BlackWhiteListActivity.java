@@ -13,6 +13,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,6 +49,7 @@ public class BlackWhiteListActivity extends ListActivity {
             Collections.sort(filteredList);
             mobileArrayAdapter.notifyDataSetChanged();
             Log.d(TAG, "bind service successful");
+            log("Enter", getListMode());
         }
 
         @Override
@@ -135,6 +139,7 @@ public class BlackWhiteListActivity extends ListActivity {
         Log.d(TAG, "on Pause");
         mService.flush();
         super.onPause();
+        log("Leave", getListMode());
         if (mBound) {
             unbindService(mConnection);
             mBound = false;
@@ -146,5 +151,39 @@ public class BlackWhiteListActivity extends ListActivity {
     protected void onStop() {
         Log.d(TAG, "on Stop");
         super.onStop();
+    }
+
+    private String getListMode() {
+        if (option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) {
+            return JoulerEnergyManageBlackWhiteListService.BLACK;
+        }
+        if (option == JoulerEnergyManageBlackWhiteListService.WHITE_LIST_INTENT) {
+            return JoulerEnergyManageBlackWhiteListService.WHITE;
+        }
+        return "UNKNOWN";
+    }
+
+    private JSONObject getListDetail() {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            for (MyPackageInfo myPackageInfo : filteredList) {
+                jsonObject.put(myPackageInfo.getPackageName(), myPackageInfo.inList());
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
+    }
+
+    private void log(String key, String value) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put(key, value);
+            jsonObject.put("List mode", getListMode());
+            jsonObject.put("List detail", getListDetail());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.i(TAG, jsonObject.toString());
     }
 }
