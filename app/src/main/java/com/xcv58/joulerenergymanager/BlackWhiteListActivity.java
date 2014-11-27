@@ -61,6 +61,7 @@ public class BlackWhiteListActivity extends ListActivity {
         Log.d(TAG, "onCreate activity with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
         setTitle(((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? R.string.blacklist : R.string.whitelist));
 
+
         blackWhiteListServiceIntent = new Intent(this, JoulerEnergyManageBlackWhiteListService.class);
         blackWhiteListServiceIntent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, option);
         startService(blackWhiteListServiceIntent);

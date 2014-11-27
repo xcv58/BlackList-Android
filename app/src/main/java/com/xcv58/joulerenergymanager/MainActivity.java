@@ -18,6 +18,9 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +41,12 @@ public class MainActivity extends Activity {
     private JoulerEnergyManageDeamon mService;
     private boolean mBound;
     private Intent joulerenergyManageDeamonIntent;
+
+    private final static String ONCREATE = "oncreate";
+    private final static String OPERATION = "operation";
+    private final static String SELECT = "select: ";
+    private final static String ENTER = "enter: ";
+    private final static String EXIT = "exit";
 
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -86,6 +95,7 @@ public class MainActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
                 Log.d(TAG, "CLICK " + POLICY_OPTIONS[position]);
+                log(SELECT + POLICY_OPTIONS[position]);
                 mService.putChoice(POLICY_OPTIONS[position]);
                 changeButton(POLICY_OPTIONS[position]);
                 optionsAdapter.notifyDataSetChanged();
@@ -95,6 +105,17 @@ public class MainActivity extends Activity {
         descriptionTextView = (TextView) findViewById(R.id.description);
         descriptionTextView.setMovementMethod(new ScrollingMovementMethod());
         button = (Button) findViewById(R.id.button);
+        log(ONCREATE);
+    }
+
+    private void log(String s) {
+        JSONObject json = new JSONObject();
+        try {
+            json.put(OPERATION, s);
+        } catch (JSONException e1) {
+            e1.printStackTrace();
+        }
+        Log.i(TAG, json.toString());
     }
 
     private void changeButton(String option) {
@@ -131,6 +152,7 @@ public class MainActivity extends Activity {
         } else {
             Log.e(TAG, option + " is impossible button");
         }
+        log(ENTER + option);
         if (intent != null) {
             startActivity(intent);
         }
@@ -139,5 +161,6 @@ public class MainActivity extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        log(EXIT);
     }
 }

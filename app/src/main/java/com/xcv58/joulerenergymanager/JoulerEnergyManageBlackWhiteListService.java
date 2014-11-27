@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -30,6 +31,9 @@ import android.os.JoulerStats;
 import android.os.JoulerStats.UidStats;
 import android.os.RemoteException;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Created by xcv58 on 11/20/14.
  */
@@ -44,7 +48,14 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public static final int WHITE_LIST_INTENT = 2;
     public static final String whichList = "Which List";
 
+    private static final String ENTER_SAVE_MODE = "Enter save mode";
+
     public static final int LOW_BRIGHTNESS = 10;
+    private static final String LEAVE_SAVE_MODE = "Leave save mode";
+    private static final String WHICH_LIST = "List mode";
+    private static final String BLACK = "Black";
+    private static final String WHITE = "White";
+    private static final String ENERGY_DETAIL = "Energy detail";
     private int option;
     private String listMapLocation;
 
@@ -78,28 +89,28 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             if (action.equals(Intent.ACTION_RESUME_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
                     Log.d(TAG, "Enter energy save mode by Black rule, " + packageName);
-                    saveMode(uid);
+                    saveMode(uid, packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
                     Log.d(TAG, "Enter energy save mode by White rule, " + packageName);
-                    saveMode(uid);
+                    saveMode(uid, packageName);
                 }
             } else if (action.equals(Intent.ACTION_PAUSE_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
                     Log.d(TAG, "Reset brightness, BLACK");
-                    resetBrightness();
+                    resetBrightness(packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
                     Log.d(TAG, "Reset brightness, WHITE");
-                    resetBrightness();
+                    resetBrightness(packageName);
                 }
             }
             Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
         }
     };
 
-    private void print() {
-        Log.d(TAG, "START PRINT");
+    private JSONObject getJsonDetail() {
+        JSONObject json = new JSONObject();
         try {
             byte[] bytes = joulerPolicy.getStatistics();
             Parcel parcel = Parcel.obtain();
@@ -107,18 +118,45 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             parcel.setDataPosition(0); // this is extremely important!
             JoulerStats joulerStats = new JoulerStats(parcel);
             Log.d(TAG, "SIZE: " + joulerStats.mUidArray.size());
-            for( int i = 0; i < joulerStats.mUidArray.size(); i++){
+            for (int i = 0; i < joulerStats.mUidArray.size(); i++) {
                 UidStats u = joulerStats.mUidArray.valueAt(i);
-                Log.i(TAG, "Uid: "+u.getUid()+" Pkg: "+u.packageName);
-                Log.i(TAG, "Uid: "+u.getUid()+"Fg= "+u.getFgEnergy()+" Bg= "+u.getBgEnergy()+" Cpu= "+u.getCpuEnergy()+" Wakelock= "+u.getWakelockEnergy()+" Wifi= "+u.getWifiEnergy()
-                        + " Mobile Data= "+u.getMobileDataEnergy()+" Wifi Data= "+u.getWifiDataEnergy()+" Video= "+u.getVideoEnergy());
-                Log.i(TAG, "Uid: "+u.getUid()+" Frames= "+u.getFrame()+" Launches= "+u.getCount()+" Usage= "+u.getUsageTime());
+                if (u.packageName == null) {
+                    continue;
+                }
+                json.put(u.packageName, getJSON(u));
+                Log.i(TAG, "Uid: " + u.getUid() + " Pkg: " + u.packageName);
+                Log.i(TAG, "Uid: " + u.getUid() + "Fg= " + u.getFgEnergy() + " Bg= " + u.getBgEnergy() + " Cpu= " + u.getCpuEnergy() + " Wakelock= " + u.getWakelockEnergy() + " Wifi= " + u.getWifiEnergy()
+                        + " Mobile Data= " + u.getMobileDataEnergy() + " Wifi Data= " + u.getWifiDataEnergy() + " Video= " + u.getVideoEnergy());
+                Log.i(TAG, "Uid: " + u.getUid() + " Frames= " + u.getFrame() + " Launches= " + u.getCount() + " Usage= " + u.getUsageTime());
             }
         } catch (RemoteException e) {
             e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        return json;
+    }
 
-        Log.d(TAG, "END PRINT");
+    private JSONObject getJSON(UidStats u) {
+        JSONObject json = new JSONObject();
+        try {
+            json.put("packagename", u.packageName);
+            json.put("FgEnergy", u.getFgEnergy());
+            json.put("BgEnergy", u.getBgEnergy());
+            json.put("CPU", u.getCpuEnergy());
+            json.put("Wakelock", u.getWakelockEnergy());
+            json.put("Wifi", u.getWifiEnergy());
+            json.put("Mobile Data", u.getMobileDataEnergy());
+            json.put("Wifi Data", u.getWifiDataEnergy());
+            json.put("Video", u.getVideoEnergy());
+            json.put("Video", u.getVideoEnergy());
+            json.put("Frames", u.getFrame());
+            json.put("Launches", u.getCount());
+            json.put("Usage time", u.getUsageTime());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
     }
 
     private double getEnergy(int uid) {
@@ -145,10 +183,23 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
 
-    private void saveMode(int uid) {
+    private void saveMode(int uid, String packagename) {
+        log(ENTER_SAVE_MODE, packagename);
         Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
         setBrightness(LOW_BRIGHTNESS);
         joulerPolicy.resetPriority(uid, 20);
+    }
+
+    private void log(String key, String value) {
+        JSONObject json = new JSONObject();
+        try {
+            json.put(key, value);
+            json.put(WHICH_LIST, (isBlackList() ? BLACK : WHITE));
+            json.put(ENERGY_DETAIL, getJsonDetail());
+        } catch (JSONException e1) {
+            e1.printStackTrace();
+        }
+        Log.i(TAG, json.toString());
     }
 
 
@@ -174,6 +225,11 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                 Settings.System.SCREEN_BRIGHTNESS_MODE,
                 Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
         brightnessSetted = true;
+    }
+
+    private void resetBrightness(String packagename) {
+        log(LEAVE_SAVE_MODE, packagename);
+        this.resetBrightness();
     }
 
     private void resetBrightness() {
