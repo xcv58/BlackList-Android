@@ -124,10 +124,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     continue;
                 }
                 json.put(u.packageName, getJSON(u));
-                Log.i(TAG, "Uid: " + u.getUid() + " Pkg: " + u.packageName);
-                Log.i(TAG, "Uid: " + u.getUid() + "Fg= " + u.getFgEnergy() + " Bg= " + u.getBgEnergy() + " Cpu= " + u.getCpuEnergy() + " Wakelock= " + u.getWakelockEnergy() + " Wifi= " + u.getWifiEnergy()
-                        + " Mobile Data= " + u.getMobileDataEnergy() + " Wifi Data= " + u.getWifiDataEnergy() + " Video= " + u.getVideoEnergy());
-                Log.i(TAG, "Uid: " + u.getUid() + " Frames= " + u.getFrame() + " Launches= " + u.getCount() + " Usage= " + u.getUsageTime());
             }
         } catch (RemoteException e) {
             e.printStackTrace();
