@@ -95,10 +95,9 @@ public class BlackWhiteListActivity extends ListActivity {
     private List<MyPackageInfo> getFilteredList(List<ResolveInfo> list, PackageManager packageManager) {
         List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
         HashSet<String> set = getDupicateHashSet();
-        String myPackageName = getPackageName();
         for (ResolveInfo resolveInfo : list) {
             String packageName = resolveInfo.activityInfo.packageName;
-            if (!packageName.equals(myPackageName) && !packageName.equals("com.google.android.googlequicksearchbox") && !set.contains(packageName)) {
+            if (!set.contains(packageName)) {
                 resultList.add(new MyPackageInfo(resolveInfo, this));
                 set.add(resolveInfo.activityInfo.packageName);
             }
@@ -108,14 +107,14 @@ public class BlackWhiteListActivity extends ListActivity {
 
     private HashSet<String> getDupicateHashSet() {
         HashSet<String> set = new HashSet<String>();
-        if (!isBlackMode()) {
-            PackageManager pm =  getPackageManager();
-            Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-            mainIntent.addCategory(Intent.CATEGORY_HOME);
-            List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(mainIntent, 0);
-            for (ResolveInfo resolveInfo : resolveInfoList) {
-                set.add(resolveInfo.activityInfo.packageName);
-            }
+        set.add(getPackageName());
+        set.add("com.google.android.launcher");
+        PackageManager pm =  getPackageManager();
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_HOME);
+        List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(mainIntent, 0);
+        for (ResolveInfo resolveInfo : resolveInfoList) {
+            set.add(resolveInfo.activityInfo.packageName);
         }
         return set;
     }

@@ -325,7 +325,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             }
         }
         listMap.put(getPackageName(), 1);
-        listMap.put("com.google.android.googlequicksearchbox", 1);
     }
 
     private void putAllLuncherInList() {
