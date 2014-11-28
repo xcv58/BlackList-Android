@@ -18,6 +18,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -93,7 +94,7 @@ public class BlackWhiteListActivity extends ListActivity {
 
     private List<MyPackageInfo> getFilteredList(List<ResolveInfo> list, PackageManager packageManager) {
         List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
-        HashSet<String> set = new HashSet<String>();
+        HashSet<String> set = getDupicateHashSet();
         String myPackageName = getPackageName();
         for (ResolveInfo resolveInfo : list) {
             String packageName = resolveInfo.activityInfo.packageName;
@@ -103,6 +104,20 @@ public class BlackWhiteListActivity extends ListActivity {
             }
         }
         return resultList;
+    }
+
+    private HashSet<String> getDupicateHashSet() {
+        HashSet<String> set = new HashSet<String>();
+        if (!isBlackMode()) {
+            PackageManager pm =  getPackageManager();
+            Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+            mainIntent.addCategory(Intent.CATEGORY_HOME);
+            List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(mainIntent, 0);
+            for (ResolveInfo resolveInfo : resolveInfoList) {
+                set.add(resolveInfo.activityInfo.packageName);
+            }
+        }
+        return set;
     }
 
     @Override
@@ -161,6 +176,10 @@ public class BlackWhiteListActivity extends ListActivity {
             return JoulerEnergyManageBlackWhiteListService.WHITE;
         }
         return "UNKNOWN";
+    }
+
+    private boolean isBlackMode() {
+        return option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT;
     }
 
     private JSONObject getListDetail() {

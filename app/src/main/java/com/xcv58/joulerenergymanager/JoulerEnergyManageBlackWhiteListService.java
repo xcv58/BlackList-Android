@@ -269,6 +269,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         if (isWhiteList()) {
             // set itself in white list and all other non luncher app as whitelist.
             putAllNonLuncherInList();
+            putAllLuncherInList();
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -325,6 +326,17 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         }
         listMap.put(getPackageName(), 1);
         listMap.put("com.google.android.googlequicksearchbox", 1);
+    }
+
+    private void putAllLuncherInList() {
+        PackageManager pm =  getPackageManager();
+        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+        mainIntent.addCategory(Intent.CATEGORY_HOME);
+        List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(mainIntent, 0);
+
+        for (ResolveInfo resolveInfo : resolveInfoList) {
+            listMap.put(resolveInfo.activityInfo.packageName, 1);
+        }
     }
 
     public boolean isBlackList() {
