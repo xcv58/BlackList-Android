@@ -21,7 +21,9 @@ public class JoulerEnergyManageDeamon extends Service {
     private SharedPreferences policyPreferences;
 
     private final static String TAG = "JoulerEnergyManageDeamon";
-    private final static String ONCREATE = "deamon Start";
+    private final static String ONCREATE = "deamon onCreate";
+    private final static String ONSTART = "deamon onStartCommand with mode: ";
+    private final static String ONDESTORY = "onDestroy";
     private final static String OPERATION = "Operation";
     private final static String START = "Start service: ";
     private final static String STOP = "Stop service: ";
@@ -35,7 +37,7 @@ public class JoulerEnergyManageDeamon extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(MainActivity.TAG, "Deamon Start");
+        Log.d(TAG, "Deamon onCreate");
         log(ONCREATE);
         policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
         mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
@@ -44,6 +46,9 @@ public class JoulerEnergyManageDeamon extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        String startMode = intent.getExtras().getString(StartupReceiver.START_MODE);
+        Log.d(TAG, "Start deamon with mode: " + startMode);
+        log(ONSTART + startMode);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -56,7 +61,8 @@ public class JoulerEnergyManageDeamon extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(MainActivity.TAG, "Deamon stop");
+        Log.d(TAG, "Deamon onDestroy");
+        log(ONDESTORY);
     }
 
     public boolean isChoice(String choice) {

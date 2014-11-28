@@ -78,6 +78,7 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         joulerenergyManageDeamonIntent = new Intent(this, JoulerEnergyManageDeamon.class);
+        joulerenergyManageDeamonIntent.putExtra(StartupReceiver.START_MODE, StartupReceiver.ACTIVITY);
         startService(joulerenergyManageDeamonIntent);
         bindService(joulerenergyManageDeamonIntent, mConnection, this.BIND_AUTO_CREATE);
 
