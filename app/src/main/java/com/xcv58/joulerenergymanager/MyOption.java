@@ -5,7 +5,7 @@ package com.xcv58.joulerenergymanager;
  */
 public class MyOption {
     private String name;
-    private JoulerEnergyManageDeamon mService;
+    private JoulerEnergyManageDaemon mService;
 
     public MyOption(String name) {
         this.name = name;
@@ -15,7 +15,7 @@ public class MyOption {
         return name;
     }
 
-    public void setService(JoulerEnergyManageDeamon serive) {
+    public void setService(JoulerEnergyManageDaemon serive) {
         mService = serive;
     }
 

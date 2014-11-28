@@ -27,7 +27,7 @@ public class StartupReceiver extends BroadcastReceiver {
     {
         if (intent.getAction().equalsIgnoreCase(Intent.ACTION_BOOT_COMPLETED)) {
             if (context != null) {
-                Intent serviceIntent = new Intent(context, JoulerEnergyManageDeamon.class);
+                Intent serviceIntent = new Intent(context, JoulerEnergyManageDaemon.class);
                 serviceIntent.putExtra(START_MODE, BOOT);
                 context.startService(serviceIntent);
                 Log.d(MainActivity.TAG, "Daemon start");

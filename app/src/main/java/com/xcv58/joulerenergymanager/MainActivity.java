@@ -4,18 +4,14 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Point;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.Display;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.json.JSONException;
@@ -38,9 +34,9 @@ public class MainActivity extends Activity {
     private List<MyOption> optionList;
     private Button button;
     private TextView descriptionTextView;
-    private JoulerEnergyManageDeamon mService;
+    private JoulerEnergyManageDaemon mService;
     private boolean mBound;
-    private Intent joulerenergyManageDeamonIntent;
+    private Intent joulerenergyManageDaemonIntent;
 
     private final static String ONCREATE = "oncreate";
     private final static String OPERATION = "operation";
@@ -55,7 +51,7 @@ public class MainActivity extends Activity {
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
             Log.d(TAG, "ServiceConnection");
-            JoulerEnergyManageDeamon.LocalBinder binder = (JoulerEnergyManageDeamon.LocalBinder) service;
+            JoulerEnergyManageDaemon.LocalBinder binder = (JoulerEnergyManageDaemon.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
             // update mService and optionList
@@ -77,10 +73,10 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        joulerenergyManageDeamonIntent = new Intent(this, JoulerEnergyManageDeamon.class);
-        joulerenergyManageDeamonIntent.putExtra(StartupReceiver.START_MODE, StartupReceiver.ACTIVITY);
-        startService(joulerenergyManageDeamonIntent);
-        bindService(joulerenergyManageDeamonIntent, mConnection, this.BIND_AUTO_CREATE);
+        joulerenergyManageDaemonIntent = new Intent(this, JoulerEnergyManageDaemon.class);
+        joulerenergyManageDaemonIntent.putExtra(StartupReceiver.START_MODE, StartupReceiver.ACTIVITY);
+        startService(joulerenergyManageDaemonIntent);
+        bindService(joulerenergyManageDaemonIntent, mConnection, this.BIND_AUTO_CREATE);
 
         setContentView(R.layout.main_activity);
 

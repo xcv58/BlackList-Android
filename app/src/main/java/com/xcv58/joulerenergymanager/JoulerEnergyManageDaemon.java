@@ -13,31 +13,31 @@ import org.json.JSONObject;
 /**
  * Created by xcv58 on 11/25/14.
  */
-public class JoulerEnergyManageDeamon extends Service {
+public class JoulerEnergyManageDaemon extends Service {
     private final IBinder mBinder = new LocalBinder();
     public static final String JOULER_POLICY = "JoulerPolicy";
     private static final String DEFAULT_POLICY = MainActivity.DEFAULT;
     private String mChoice;
     private SharedPreferences policyPreferences;
 
-    private final static String TAG = "JoulerEnergyManageDeamon";
-    private final static String ONCREATE = "deamon onCreate";
-    private final static String ONSTART = "deamon onStartCommand with mode: ";
+    private final static String TAG = "JoulerEnergyManageDaemon";
+    private final static String ONCREATE = "Daemon onCreate";
+    private final static String ONSTART = "Daemon onStartCommand with mode: ";
     private final static String ONDESTORY = "onDestroy";
     private final static String OPERATION = "Operation";
     private final static String START = "Start service: ";
     private final static String STOP = "Stop service: ";
 
     public class LocalBinder extends Binder {
-        JoulerEnergyManageDeamon getService() {
-            return JoulerEnergyManageDeamon.this;
+        JoulerEnergyManageDaemon getService() {
+            return JoulerEnergyManageDaemon.this;
         }
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Deamon onCreate");
+        Log.d(TAG, "Daemon onCreate");
         log(ONCREATE);
         policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
         mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
@@ -47,7 +47,7 @@ public class JoulerEnergyManageDeamon extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String startMode = intent.getExtras().getString(StartupReceiver.START_MODE);
-        Log.d(TAG, "Start deamon with mode: " + startMode);
+        Log.d(TAG, "Start daemon with mode: " + startMode);
         log(ONSTART + startMode);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -61,7 +61,7 @@ public class JoulerEnergyManageDeamon extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "Deamon onDestroy");
+        Log.d(TAG, "Daemon onDestroy");
         log(ONDESTORY);
     }
 
@@ -74,7 +74,7 @@ public class JoulerEnergyManageDeamon extends Service {
     }
 
     public String putChoice(String choice) {
-        Log.d(MainActivity.TAG, "Deamon Serive got new choice: " + choice + ", old is: " + mChoice);
+        Log.d(MainActivity.TAG, "Daemon Serive got new choice: " + choice + ", old is: " + mChoice);
         if (choice.equals(mChoice)) {
             return mChoice;
         }
@@ -86,7 +86,7 @@ public class JoulerEnergyManageDeamon extends Service {
         editor.commit();
         mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
 
-        Log.d(MainActivity.TAG, "Deamon Serive update choice to: " + mChoice);
+        Log.d(MainActivity.TAG, "Daemon Serive update choice to: " + mChoice);
         this.startServiceForChoice();
 
         return mChoice;

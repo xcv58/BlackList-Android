@@ -32,7 +32,7 @@
 
         <service android:name=".JoulerEnergyManageBlackWhiteListService"
             android:enabled="true" />
-        <service android:name="com.xcv58.joulerenergymanager.JoulerEnergyManageDeamon"
+        <service android:name=".JoulerEnergyManageDaemon"
         android:enabled="true" />
     </application>
 
