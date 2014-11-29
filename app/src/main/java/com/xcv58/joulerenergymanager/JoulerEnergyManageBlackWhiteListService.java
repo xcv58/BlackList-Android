@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.DropBoxManager;
 import android.os.IBinder;
 import android.os.JoulerPolicy;
 import android.os.Parcel;
@@ -52,6 +53,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private static final String ENTER_SAVE_MODE = "Enter save mode";
 
     public static final int LOW_BRIGHTNESS = 10;
+    public static final int LOW_PRIORITY = 20;
     private static final String LEAVE_SAVE_MODE = "Leave save mode";
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
@@ -63,6 +65,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private boolean brightnessSetted = false;
     private int previousBrightness;
     private int previousBrightnessMode;
+    private HashMap<Integer, Integer> priorityMap;
 
     private JoulerPolicy joulerPolicy;
     private JoulerStats joulerStats;
@@ -220,8 +223,29 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private void saveMode(int uid, String packagename) {
         log(ENTER_SAVE_MODE, packagename);
         Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
+
         setBrightness(LOW_BRIGHTNESS);
-        joulerPolicy.resetPriority(uid, 20);
+        resetPriority(uid, packagename);
+    }
+
+    private void resetPriority(int uid, String packagename) {
+        if (!priorityMap.containsKey(uid)) {
+            int previousPriority = joulerPolicy.getPriority(uid);
+            priorityMap.put(uid, previousPriority);
+            joulerPolicy.resetPriority(uid, LOW_PRIORITY);
+            Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
+        }
+        return;
+    }
+
+    private void resetPriority() {
+        Iterator<Map.Entry<Integer, Integer>> iterator = priorityMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Integer, Integer> entry = iterator.next();
+            int uid = entry.getKey();
+            int priority = entry.getValue();
+            joulerPolicy.resetPriority(uid, priority);
+        }
     }
 
     private void log(String key, String value) {
@@ -295,6 +319,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
         joulerStats = new JoulerStats();
 
+        priorityMap = new HashMap<Integer, Integer>();
 
         IntentFilter batteryChangeIntentFilter = new IntentFilter();
         batteryChangeIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
@@ -336,6 +361,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         unregisterReceiver(onBatteryChange);
         flush();
         resetBrightness();
+        resetPriority();
         Log.d(TAG, "onDestroy() executed " + getListName() + " " + listMapLocation);
     }
 
