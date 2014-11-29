@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -46,7 +47,14 @@ public class JoulerEnergyManageDaemon extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String startMode = intent.getExtras().getString(StartupReceiver.START_MODE);
+        Bundle bundle = intent.getExtras();
+        String startMode = null;
+        if (bundle != null) {
+            startMode = bundle.getString(StartupReceiver.START_MODE);
+        }
+        if (startMode == null) {
+            startMode = "UNKNOWN";
+        }
         Log.d(TAG, "Start daemon with mode: " + startMode);
         log(ONSTART + startMode);
         return super.onStartCommand(intent, flags, startId);
