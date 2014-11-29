@@ -9,6 +9,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -106,6 +107,43 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                 }
             }
             Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
+        }
+    };
+
+    BroadcastReceiver onBatteryChange = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+            try {
+                JSONObject json = new JSONObject();
+                json.put("currentBatteryLevel", level);
+                json.put("isCharging", isCharging);
+                json.put(WHICH_LIST, (isBlackList() ? BLACK : WHITE));
+                Log.i(TAG, json.toString());
+            }catch (JSONException e) {
+                Log.i(TAG, "Error @ onBatteryChange receiver: "+e.getMessage());
+            }
+        }
+    };
+
+    BroadcastReceiver screenReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                JSONObject json = new JSONObject();
+                if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                    json.put("Screen", "OFF");
+                } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                    json.put("Screen", "ON");
+                }
+                json.put(WHICH_LIST, (isBlackList() ? BLACK : WHITE));
+                Log.i(TAG, json.toString());
+            }catch (JSONException e) {
+                Log.i(TAG, "Error @ onBatteryChange receiver: "+e.getMessage());
+            }
         }
     };
 
@@ -257,6 +295,15 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
         joulerStats = new JoulerStats();
 
+
+        IntentFilter batteryChangeIntentFilter = new IntentFilter();
+        batteryChangeIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        registerReceiver(onBatteryChange, batteryChangeIntentFilter);
+        IntentFilter screenOnOffIntentFilter = new IntentFilter();
+        screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_ON);
+        screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(screenReceiver, screenOnOffIntentFilter);
+
         Log.d(TAG, "onCreate() executed");
     }
 
@@ -285,6 +332,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(broadcastReceiver);
+        unregisterReceiver(screenReceiver);
+        unregisterReceiver(onBatteryChange);
         flush();
         resetBrightness();
         Log.d(TAG, "onDestroy() executed " + getListName() + " " + listMapLocation);
