@@ -102,25 +102,30 @@ public class JoulerEnergyManageDaemon extends Service {
             stopService(new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class));
         }
         if (mChoice.equals(MainActivity.WHITE_LIST)) {
+            stopService(new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class));
         }
         if (mChoice.equals(MainActivity.LIFE_TIME)) {
+            stopService(new Intent(getBaseContext(), LifetimeManagerService.class));
         }
     }
 
     private void startServiceForChoice() {
         Log.d(MainActivity.TAG, "Start service: " + mChoice);
         log(START + mChoice);
+        Intent intent = null;
         if (mChoice.equals(MainActivity.BLACK_LIST)) {
-            Intent intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
+            intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
             intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT);
-            startService(intent);
         }
         if (mChoice.equals(MainActivity.WHITE_LIST)) {
-            Intent intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
+            intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
             intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.WHITE_LIST_INTENT);
-            startService(intent);
         }
         if (mChoice.equals(MainActivity.LIFE_TIME)) {
+            intent = new Intent(getBaseContext(), LifetimeManagerService.class);
+        }
+        if (intent != null) {
+            startService(intent);
         }
     }
 

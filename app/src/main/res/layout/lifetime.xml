@@ -1,0 +1,54 @@
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/AbsoluteLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <EditText
+        android:id="@+id/threshold1"
+        android:layout_width="89dp"
+        android:layout_height="wrap_content"
+        android:layout_x="13dp"
+        android:layout_y="19dp"
+        android:hint="0-100"
+        android:inputType="number"
+        android:singleLine="true" />
+
+    <EditText
+        android:id="@+id/threshold2"
+        android:layout_width="88dp"
+        android:layout_height="wrap_content"
+        android:layout_x="127dp"
+        android:layout_y="20dp"
+        android:hint="0-100"
+        android:inputType="number"
+        android:singleLine="true" />
+
+    <EditText
+        android:id="@+id/threshold3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="240dp"
+        android:layout_y="22dp"
+        android:hint="1-24"
+        android:inputType="number"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/Description4"
+        android:layout_width="276dp"
+        android:layout_height="141dp"
+        android:layout_x="19dp"
+        android:layout_y="108dp"
+        android:text="Click each textbox for more information" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="118dp"
+        android:layout_height="wrap_content"
+        android:layout_x="98dp"
+        android:layout_y="276dp"
+        android:text="Done" />
+
+</AbsoluteLayout>

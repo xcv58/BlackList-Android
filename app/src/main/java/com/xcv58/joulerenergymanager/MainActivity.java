@@ -145,7 +145,7 @@ public class MainActivity extends Activity {
             intent = new Intent(this, BlackWhiteListActivity.class);
             intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.WHITE_LIST_INTENT);
         } else if (option.equals(LIFE_TIME)) {
-
+            intent = new Intent(this, LifetimeManagerActivity.class);
         } else {
             Log.e(TAG, option + " is impossible button");
         }

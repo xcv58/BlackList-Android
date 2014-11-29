@@ -15,6 +15,11 @@
             android:label="@string/blacklist" >
         </activity>
         <activity
+            android:name=".LifetimeManagerActivity"
+            android:label="@string/app_name" >
+        </activity>
+
+        <activity
             android:name="com.xcv58.joulerenergymanager.MainActivity"
             android:screenOrientation="portrait"
             android:label="@string/app_name" >
@@ -34,6 +39,11 @@
             android:enabled="true" />
         <service android:name=".JoulerEnergyManageDaemon"
         android:enabled="true" />
+        <service android:name=".LifetimeManagerService">
+            <intent-filter>
+                <action android:name="com.xcv58.joulerenergymanager.LifetimeManagerService" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
