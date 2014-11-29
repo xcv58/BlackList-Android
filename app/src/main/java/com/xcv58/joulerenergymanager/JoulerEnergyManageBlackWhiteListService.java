@@ -395,7 +395,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         while (e.hasNext()) {
             Map.Entry<String, Integer> entry = (Map.Entry<String, Integer>) e.next();
             if (entry.getValue() == 0) {
-                Log.d(TAG, "Set " + entry.getKey() + " in white list");
                 listMap.put(entry.getKey(), 1);
             }
         }
