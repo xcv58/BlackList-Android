@@ -40,9 +40,6 @@ public class JoulerEnergyManageDaemon extends Service {
         super.onCreate();
         Log.d(TAG, "Daemon onCreate");
         log(ONCREATE);
-        policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
-        mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
-        this.startServiceForChoice();
     }
 
     @Override
@@ -57,6 +54,11 @@ public class JoulerEnergyManageDaemon extends Service {
         }
         Log.d(TAG, "Start daemon with mode: " + startMode);
         log(ONSTART + startMode);
+
+        policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
+        mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
+        this.startServiceForChoice();
+
         return super.onStartCommand(intent, flags, startId);
     }
 

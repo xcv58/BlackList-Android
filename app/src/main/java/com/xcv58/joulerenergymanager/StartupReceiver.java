@@ -19,7 +19,7 @@ public class StartupReceiver extends BroadcastReceiver {
 
 
     private final static long INTERVAL = 1000L * 60L * 60L;
-//    private final static long INTERVAL = 1000L * 6L;
+//    private final static long INTERVAL = 1000L * 60L;
     private AlarmManager alarmMgr;
 
     @Override
