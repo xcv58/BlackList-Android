@@ -38,7 +38,7 @@ public class JoulerEnergyManageDaemon extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "Daemon onCreate");
+//        Log.d(TAG, "Daemon onCreate");
         log(ONCREATE);
     }
 
@@ -52,7 +52,7 @@ public class JoulerEnergyManageDaemon extends Service {
         if (startMode == null) {
             startMode = "UNKNOWN";
         }
-        Log.d(TAG, "Start daemon with mode: " + startMode);
+//        Log.d(TAG, "Start daemon with mode: " + startMode);
         log(ONSTART + startMode);
 
         policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
@@ -64,14 +64,14 @@ public class JoulerEnergyManageDaemon extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(MainActivity.TAG, "onBind() executed");
+//        Log.d(MainActivity.TAG, "onBind() executed");
         return mBinder;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "Daemon onDestroy");
+//        Log.d(TAG, "Daemon onDestroy");
         log(ONDESTORY);
     }
 
@@ -84,7 +84,7 @@ public class JoulerEnergyManageDaemon extends Service {
     }
 
     public String putChoice(String choice) {
-        Log.d(MainActivity.TAG, "Daemon Serive got new choice: " + choice + ", old is: " + mChoice);
+//        Log.d(MainActivity.TAG, "Daemon Serive got new choice: " + choice + ", old is: " + mChoice);
         if (choice.equals(mChoice)) {
             return mChoice;
         }
@@ -96,14 +96,14 @@ public class JoulerEnergyManageDaemon extends Service {
         editor.commit();
         mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
 
-        Log.d(MainActivity.TAG, "Daemon Serive update choice to: " + mChoice);
+//        Log.d(MainActivity.TAG, "Daemon Serive update choice to: " + mChoice);
         this.startServiceForChoice();
 
         return mChoice;
     }
 
     private void stopServiceForChoice() {
-        Log.d(MainActivity.TAG, "Stop service: " + mChoice);
+//        Log.d(MainActivity.TAG, "Stop service: " + mChoice);
         log(STOP + mChoice);
         if (mChoice.equals(MainActivity.DEFAULT)) {
             // do nothing because default
@@ -120,7 +120,7 @@ public class JoulerEnergyManageDaemon extends Service {
     }
 
     private void startServiceForChoice() {
-        Log.d(MainActivity.TAG, "Start service: " + mChoice);
+//        Log.d(MainActivity.TAG, "Start service: " + mChoice);
         log(START + mChoice);
         Intent intent = null;
         if (mChoice.equals(MainActivity.BLACK_LIST)) {

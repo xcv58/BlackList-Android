@@ -125,6 +125,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                 json.put("currentBatteryLevel", level);
                 json.put("isCharging", isCharging);
                 json.put(WHICH_LIST, (isBlackList() ? BLACK : WHITE));
+                json.put(ENERGY_DETAIL, getJsonDetail());
                 Log.i(TAG, json.toString());
             }catch (JSONException e) {
                 Log.i(TAG, "Error @ onBatteryChange receiver: "+e.getMessage());

@@ -50,18 +50,18 @@ public class MainActivity extends Activity {
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            Log.d(TAG, "ServiceConnection");
+//            Log.d(TAG, "ServiceConnection");
             JoulerEnergyManageDaemon.LocalBinder binder = (JoulerEnergyManageDaemon.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
             // update mService and optionList
-            Log.d(TAG, "Get choice: " + mService.getChoice());
+//            Log.d(TAG, "Get choice: " + mService.getChoice());
             changeButton(mService.getChoice());
             for (MyOption option : optionList) {
                 option.setService(mService);
             }
             optionsAdapter.notifyDataSetChanged();
-            Log.d(TAG, "bind service successful");
+//            Log.d(TAG, "bind service successful");
         }
 
         @Override
@@ -91,7 +91,7 @@ public class MainActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position,
                                     long id) {
-                Log.d(TAG, "CLICK " + POLICY_OPTIONS[position]);
+//                Log.d(TAG, "CLICK " + POLICY_OPTIONS[position]);
                 log(SELECT + POLICY_OPTIONS[position]);
                 mService.putChoice(POLICY_OPTIONS[position]);
                 changeButton(POLICY_OPTIONS[position]);
@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
 
     public void enterSetting(View v) {
         button = (Button) v;
-        Log.d(TAG, "click" + button.getText());
+//        Log.d(TAG, "click" + button.getText());
         String option = (String) button.getText();
         Intent intent = null;
         if (option.equals(DEFAULT)) {

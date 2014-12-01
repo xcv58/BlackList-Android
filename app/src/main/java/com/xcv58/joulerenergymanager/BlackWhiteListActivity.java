@@ -49,7 +49,6 @@ public class BlackWhiteListActivity extends ListActivity {
             }
             Collections.sort(filteredList);
             mobileArrayAdapter.notifyDataSetChanged();
-//            Log.d(TAG, "bind service successful");
             log("Enter", getListMode());
         }
 
@@ -64,33 +63,13 @@ public class BlackWhiteListActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         option = getIntent().getExtras().getInt(JoulerEnergyManageBlackWhiteListService.whichList);
 //        Log.d(TAG, "onCreate activity with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
-        log("onCreate", ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
+//        log("onCreate", ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
         setTitle(((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? R.string.blacklist : R.string.whitelist));
 
 
         blackWhiteListServiceIntent = new Intent(this, JoulerEnergyManageBlackWhiteListService.class);
         blackWhiteListServiceIntent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, option);
         startService(blackWhiteListServiceIntent);
-    }
-
-    private List<MyPackageInfo> getFilteredList(List<PackageInfo> list) {
-        List<MyPackageInfo> resultList = new ArrayList<MyPackageInfo>();
-        String myPackageName = getPackageName();
-        for (PackageInfo packageInfo : list) {
-//            if ((packageInfo.applicationInfo.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) == 0) {
-//                resultList.add(new MyPackageInfo(packageInfo, mService, this));
-//            }
-            if (packageInfo.applicationInfo.sourceDir.startsWith("/data/app/")) {
-//                Non-system app
-                Log.d(TAG, packageInfo.applicationInfo.sourceDir);
-                if (!packageInfo.packageName.equals(myPackageName)) {
-                    resultList.add(new MyPackageInfo(packageInfo, this));
-                }
-            } else {
-//                System app
-            }
-        }
-        return resultList;
     }
 
     private List<MyPackageInfo> getFilteredList(List<ResolveInfo> list, PackageManager packageManager) {
@@ -136,8 +115,6 @@ public class BlackWhiteListActivity extends ListActivity {
 
         bindService(blackWhiteListServiceIntent, mConnection, this.BIND_AUTO_CREATE);
 
-//        Log.d(TAG, "onResume activity");
-        log("onResume", "");
 //        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));
         PackageManager pm =  getPackageManager();
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
@@ -152,8 +129,6 @@ public class BlackWhiteListActivity extends ListActivity {
 
     @Override
     protected void onPause() {
-//        Log.d(TAG, "on Pause");
-        log("onPause", "");
         mService.flush();
         super.onPause();
         log("Leave", getListMode());
@@ -186,6 +161,9 @@ public class BlackWhiteListActivity extends ListActivity {
 
     private JSONObject getListDetail() {
         JSONObject jsonObject = new JSONObject();
+        if (filteredList == null) {
+            return jsonObject;
+        }
         try {
             for (MyPackageInfo myPackageInfo : filteredList) {
                 jsonObject.put(myPackageInfo.getPackageName(), myPackageInfo.inList());
