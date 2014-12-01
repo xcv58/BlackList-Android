@@ -40,7 +40,7 @@ public class BlackWhiteListActivity extends ListActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            Log.d(TAG, "ServiceConnection");
+//            Log.d(TAG, "ServiceConnection");
             JoulerEnergyManageBlackWhiteListService.LocalBinder binder = (JoulerEnergyManageBlackWhiteListService.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
@@ -49,7 +49,7 @@ public class BlackWhiteListActivity extends ListActivity {
             }
             Collections.sort(filteredList);
             mobileArrayAdapter.notifyDataSetChanged();
-            Log.d(TAG, "bind service successful");
+//            Log.d(TAG, "bind service successful");
             log("Enter", getListMode());
         }
 
@@ -63,7 +63,8 @@ public class BlackWhiteListActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         option = getIntent().getExtras().getInt(JoulerEnergyManageBlackWhiteListService.whichList);
-        Log.d(TAG, "onCreate activity with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
+//        Log.d(TAG, "onCreate activity with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
+        log("onCreate", ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
         setTitle(((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? R.string.blacklist : R.string.whitelist));
 
 
@@ -135,7 +136,8 @@ public class BlackWhiteListActivity extends ListActivity {
 
         bindService(blackWhiteListServiceIntent, mConnection, this.BIND_AUTO_CREATE);
 
-        Log.d(TAG, "onResume activity");
+//        Log.d(TAG, "onResume activity");
+        log("onResume", "");
 //        filteredList = getFilteredList(getPackageManager().getInstalledPackages(0));
         PackageManager pm =  getPackageManager();
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
@@ -150,7 +152,8 @@ public class BlackWhiteListActivity extends ListActivity {
 
     @Override
     protected void onPause() {
-        Log.d(TAG, "on Pause");
+//        Log.d(TAG, "on Pause");
+        log("onPause", "");
         mService.flush();
         super.onPause();
         log("Leave", getListMode());
@@ -163,7 +166,7 @@ public class BlackWhiteListActivity extends ListActivity {
 
     @Override
     protected void onStop() {
-        Log.d(TAG, "on Stop");
+//        Log.d(TAG, "on Stop");
         super.onStop();
     }
 

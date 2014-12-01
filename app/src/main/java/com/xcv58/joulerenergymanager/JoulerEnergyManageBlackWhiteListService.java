@@ -92,24 +92,24 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             String action = intent.getAction();
             if (action.equals(Intent.ACTION_RESUME_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
-                    Log.d(TAG, "Enter energy save mode by Black rule, " + packageName);
+//                    Log.d(TAG, "Enter energy save mode by Black rule, " + packageName);
                     saveMode(uid, packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
-                    Log.d(TAG, "Enter energy save mode by White rule, " + packageName);
+//                    Log.d(TAG, "Enter energy save mode by White rule, " + packageName);
                     saveMode(uid, packageName);
                 }
             } else if (action.equals(Intent.ACTION_PAUSE_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
-                    Log.d(TAG, "Reset brightness, BLACK");
+//                    Log.d(TAG, "Reset brightness, BLACK");
                     resetBrightness(packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
-                    Log.d(TAG, "Reset brightness, WHITE");
+//                    Log.d(TAG, "Reset brightness, WHITE");
                     resetBrightness(packageName);
                 }
             }
-            Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
+//            Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
         }
     };
 
@@ -158,7 +158,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             parcel.unmarshall(bytes, 0, bytes.length);
             parcel.setDataPosition(0); // this is extremely important!
             JoulerStats joulerStats = new JoulerStats(parcel);
-            Log.d(TAG, "SIZE: " + joulerStats.mUidArray.size());
             for (int i = 0; i < joulerStats.mUidArray.size(); i++) {
                 UidStats u = joulerStats.mUidArray.valueAt(i);
                 if (u.packageName == null) {
@@ -222,7 +221,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void saveMode(int uid, String packagename) {
         log(ENTER_SAVE_MODE, packagename);
-        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
+//        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
 
         setBrightness(LOW_BRIGHTNESS);
         resetPriority(uid, packagename);
@@ -234,7 +233,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             int previousPriority = 0;
             priorityMap.put(uid, previousPriority);
             joulerPolicy.resetPriority(uid, LOW_PRIORITY);
-            Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
+//            Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
         }
         return;
     }
@@ -271,12 +270,12 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
             previousBrightnessMode = android.provider.Settings.System.getInt(
                     getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE);
-            Log.d(TAG, "Previous brightness is: " + previousBrightness + ". Mode is: " + previousBrightnessMode);
+//            Log.d(TAG, "Previous brightness is: " + previousBrightness + ". Mode is: " + previousBrightnessMode);
         } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
         }
 
-        Log.d(TAG, "Set brightness to: " + brightness);
+//        Log.d(TAG, "Set brightness to: " + brightness);
         android.provider.Settings.System.putInt(getContentResolver(),
                 android.provider.Settings.System.SCREEN_BRIGHTNESS,
                 brightness);
@@ -295,9 +294,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         if (!brightnessSetted) {
             return;
         }
-        Log.d(TAG, "reset brightness to: "+ previousBrightness
-                + ", mode to: " +
-                (previousBrightnessMode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "auto" : "manual"));
+//
+//         (previousBrightnessMode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "auto" : "manual"));
         android.provider.Settings.System.putInt(getContentResolver(),
                 android.provider.Settings.System.SCREEN_BRIGHTNESS,
                 previousBrightness);
@@ -316,7 +314,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         intentFilter.addAction(Intent.ACTION_PAUSE_ACTIVITY);
         registerReceiver(broadcastReceiver, intentFilter);
 
-        Log.d(TAG, "get JoulerPolicy");
+//        Log.d(TAG, "get JoulerPolicy");
         joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
         joulerStats = new JoulerStats();
 
@@ -330,7 +328,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(screenReceiver, screenOnOffIntentFilter);
 
-        Log.d(TAG, "onCreate() executed");
+//        Log.d(TAG, "onCreate() executed");
     }
 
     @Override
@@ -350,7 +348,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             Log.e(TAG, "UNKNOWN option, it's a bug");
             startMode = "UNKNOWN";
         }
-        Log.d(TAG, "Start service with: " + startMode);
+//        Log.d(TAG, "Start service with: " + startMode);
 
         listMapLocation = (option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? BLACK_LIST_MAP : WHITE_LIST_MAP;
         listMap = readListMap();
@@ -365,7 +363,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         this.initMap();
-        Log.d(TAG, "onBind() executed");
+//        Log.d(TAG, "onBind() executed");
         return mBinder;
     }
 
@@ -378,7 +376,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         flush();
         resetBrightness();
         resetPriority();
-        Log.d(TAG, "onDestroy() executed " + getListName() + " " + listMapLocation);
+//        Log.d(TAG, "onDestroy() executed " + getListName() + " " + listMapLocation);
     }
 
     private String getListName() {
@@ -448,7 +446,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
     public HashMap<String, Integer> readListMap() {
-        Log.d(TAG, "read map from file: " + listMapLocation);
+//        Log.d(TAG, "read map from file: " + listMapLocation);
         try {
             FileInputStream fis = openFileInput(listMapLocation);
             ObjectInputStream is = new ObjectInputStream(fis);
