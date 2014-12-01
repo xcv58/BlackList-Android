@@ -45,14 +45,14 @@ public class LifetimeManagerService extends Service {
     static int critical = -1;
     static int lifetimeHrs = -1;
     AlarmManager alarm;
-    int lastCheckedLevel = -1;
-    double expectedDischargeRate = 0.0; //level per ms
-    boolean screen = true;
-    boolean changeCpuFreq = false;
-    boolean changeBrightness = false;
-    boolean doRateLimitFG = false ;
-    boolean doRateLimitBG = false;
-    boolean doResetPriority = false;
+    static int lastCheckedLevel = -1;
+    static double expectedDischargeRate = 0.0; //level per ms
+    static boolean screen = true;
+    static boolean changeCpuFreq = false;
+    static boolean changeBrightness = false;
+    static boolean doRateLimitFG = false ;
+    static boolean doRateLimitBG = false;
+    static boolean doResetPriority = false;
     //boolean toggle = false;
     static int cpufreq = defaultCpuFreq;
     static int brightness = 0;
@@ -301,8 +301,9 @@ public class LifetimeManagerService extends Service {
 
     private void screenOffPolicies(){
         printLog();
-        if(doRateLimitBG)
+        if(doRateLimitBG && rateLimitedUids.size() == 0) {
             setRateLimit();
+        }
         if(doResetPriority)
             setPriority();
 
@@ -318,8 +319,8 @@ public class LifetimeManagerService extends Service {
             setCpuFreq();
         if(doRateLimitBG)
             resetRateLimit();
-        if(doResetPriority)
-            setPriority();
+//        if(doResetPriority)
+//            setPriority();
 
     }
 
@@ -371,8 +372,8 @@ public class LifetimeManagerService extends Service {
                             //	js.put("throttle", u.getThrottle());
                             Log.i(TAG,js.toString());
                         }
-                    }else if(u.getThrottle()){
-                        Log.i(TAG,"setRateLimit: "+u.packageName+" :"+u.getUid());
+//                    }else if(u.getThrottle()){
+//                        Log.i(TAG,"setRateLimit: "+u.packageName+" :"+u.getUid());
                     }
 
                 }
@@ -526,7 +527,6 @@ public class LifetimeManagerService extends Service {
             is.close();
             return map;
         } catch (Exception e) {
-            Log.d("FAILEDXCV58", mapLocation + " no exists");
             e.printStackTrace();
         }
         HashMap<String, Integer> tmpHashMap = new HashMap<String, Integer>();

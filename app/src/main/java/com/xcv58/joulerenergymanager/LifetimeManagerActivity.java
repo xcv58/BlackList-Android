@@ -153,7 +153,7 @@ public class LifetimeManagerActivity extends Activity {
 
     @Override
     protected void onPause() {
-        //Log.d(TAG, "on Pause");
+//        Log.d(TAG, "on Pause");
         if(mService !=null)
             mService.flush();
         super.onPause();
