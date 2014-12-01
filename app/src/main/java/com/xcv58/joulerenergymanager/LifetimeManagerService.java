@@ -1,6 +1,12 @@
 package com.xcv58.joulerenergymanager;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONException;
@@ -16,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.BatteryManager;
+import android.os.Binder;
 import android.os.IBinder;
 import android.os.JoulerPolicy;
 import android.os.JoulerStats;
@@ -30,6 +37,7 @@ public class LifetimeManagerService extends Service {
 
     final static String TAG = "LifetimeManagerService";
     final static String TAGE = "LifetimeManagerServiceError";
+    final static String mapLocation = "LifetimeParameters";
     final static int defaultCpuFreq = 2265600;
     static int defaultBrightness;
 
@@ -52,11 +60,15 @@ public class LifetimeManagerService extends Service {
     static JoulerPolicy knob ;
     static JoulerStats stats;
     List<Integer> rateLimitedUids = new ArrayList<Integer>();
+    private HashMap<String, Integer> initialMap;
+    private final IBinder mBinder = new LocalBinder();
 
     BroadcastReceiver onBatteryChange = new BroadcastReceiver(){
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(expectedDischargeRate == 0.0)
+                return;
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
@@ -82,7 +94,7 @@ public class LifetimeManagerService extends Service {
                 if(level != lastCheckedLevel) {
                     //Log.i(TAG, "battery level="+level+"lastCheckedLevel="+lastCheckedLevel);
                     if(level <= soft && level > critical) {
-                        if((lastCheckedLevel== -1) || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 5)) {
+                        if((lastCheckedLevel== -1) || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 3)) {
                             //loading statistics
                             load();
                             lastCheckedLevel = level;
@@ -119,7 +131,7 @@ public class LifetimeManagerService extends Service {
                         }
 
                     }else if(level <= critical) {
-                        if(lastCheckedLevel== -1 || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 2)) {
+                        if(lastCheckedLevel== -1 || lastCheckedLevel > level ) {
                             //loading statistics
                             load();
                             boolean state = willLifeEndSoon(level);		//logs info
@@ -168,6 +180,7 @@ public class LifetimeManagerService extends Service {
     };
 
     private void resetPolicy() {
+        load();
         changeBrightness = false;
         changeCpuFreq = false;
         doRateLimitBG = false;
@@ -187,18 +200,14 @@ public class LifetimeManagerService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO Auto-generated method stub
-        return null;
+        this.initMap();
+        //Log.d(TAG, "onBind() executed");
+        return mBinder;
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-
-        soft = intent.getIntExtra("soft_threshold", -1);
-        critical = intent.getIntExtra("critical_threshold", -1);
-        lifetimeHrs = intent.getIntExtra("lifetime", -1);
-        if(soft == -1 || critical == -1 || lifetimeHrs == -1)
-            setDefault();
+    public void onCreate() {
+        super.onCreate();
         knob = (JoulerPolicy)getSystemService(Context.JOULER_SERVICE);
         try {
             defaultBrightness = android.provider.Settings.System.getInt(
@@ -208,17 +217,6 @@ public class LifetimeManagerService extends Service {
             e.printStackTrace();
         }
         brightness = defaultBrightness;
-        setExpectedRate();
-
-        try {
-            JSONObject json = new JSONObject();
-            json.put("expectedDischargeRate", expectedDischargeRate);
-            Log.i(TAG, json.toString());
-        }catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
         IntentFilter intent1 = new IntentFilter();
         intent1.addAction(Intent.ACTION_BATTERY_CHANGED);
         registerReceiver(onBatteryChange,intent1);
@@ -226,10 +224,38 @@ public class LifetimeManagerService extends Service {
         intent2.addAction(Intent.ACTION_SCREEN_ON);
         intent2.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(screenReceiver,intent2);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(intent==null)
+            return START_NOT_STICKY;
+        initialMap = readListMap();
+
+        soft = initialMap.get("soft");
+        critical = initialMap.get("critical");
+        lifetimeHrs = initialMap.get("lifetime");
+        if(soft == -1 || critical == -1 || lifetimeHrs == -1)
+            setDefault();
+
+        setExpectedRate();
+
+        try {
+            JSONObject json = new JSONObject();
+            json.put("soft", soft);
+            json.put("critical", critical);
+            json.put("lifetimeHrs", lifetimeHrs);
+            json.put("expectedDischargeRate", expectedDischargeRate);
+            Log.i(TAG, json.toString());
+        }catch (JSONException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+
 
         printLog();
-
-        return startId;
+        return super.onStartCommand(intent, flags, startId);
 
     }
 
@@ -243,6 +269,7 @@ public class LifetimeManagerService extends Service {
         resetPolicy();
         unregisterReceiver(screenReceiver);
         unregisterReceiver(onBatteryChange);
+        flush();
 
     }
 
@@ -300,25 +327,19 @@ public class LifetimeManagerService extends Service {
         if(stats == null || stats.mUidArray.size() == 0)
             return;
         synchronized (stats) {
-			
-		/*	if(lastCheckedLevel < soft && lastCheckedLevel > critical)
-				priority = 15;
-			else if(lastCheckedLevel <  critical)
-				priority = 19;
-		*/
             try {
                 for(int i=0; i< stats.mUidArray.size(); i++) {
                     UidStats u = stats.mUidArray.valueAt(i);
-                    if(u.getUid() < 10000)
+                    if(u.getUid() < 10000 || u.packageName == null || u.packageName.contains("joulerenergy") || u.packageName.contains("systemui"))
                         continue;
                     JSONObject js = new JSONObject();
                     js.put("uid", u.getUid());
                     js.put("packagename", u.packageName);
-                    js.put("realPriority", knob.getPriority(u.getUid()));
+                    //js.put("realPriority", knob.getPriority(u.getUid()));
                     js.put("audio", u.getAudioEnergy());
-                    if(u.getState() == false && knob.getPriority(u.getUid()) > -1 && u.getAudioEnergy() == 0.0) {
+                    if(u.getState() == false && u.getAudioEnergy() == 0.0) {
                         knob.resetPriority(u.getUid(), priority);
-                        js.put("changedPriority", knob.getPriority(u.getUid()));
+                        js.put("changedPriority", priority);
                     }
                     Log.i(TAG,js.toString());
                 }
@@ -337,16 +358,21 @@ public class LifetimeManagerService extends Service {
                 for(int i=0; i< stats.mUidArray.size(); i++) {
                     UidStats u = stats.mUidArray.valueAt(i);
                     JSONObject js = new JSONObject();
-
-                    if(u.getState() == false && u.getAudioEnergy() == 0.0 && u.getWifiDataEnergy() > 0.0 && u.getThrottle() == false) {
+                    if(u.getUid() < 10000)
+                        continue;
+                    if(u.getAudioEnergy() == 0.0 && u.getWifiDataEnergy() > 0.0 && u.getThrottle() == false) {
                         rateLimitedUids.add(u.getUid());
                         knob.rateLimitForUid(u.getUid());
                         js.put("uid", u.getUid());
                         js.put("packageName", u.packageName);
                         js.put("rateLimit", true);
                         js.put("wifiDataEnergy", u.getWifiDataEnergy());
+                        //	js.put("throttle", u.getThrottle());
+                        Log.i(TAG,js.toString());
+                    }else if(u.getThrottle()){
+                        Log.i(TAG,"setRateLimit: "+u.packageName+" :"+u.getUid());
                     }
-                    Log.i(TAG,js.toString());
+
                 }
 
             }catch(JSONException e) {
@@ -365,13 +391,14 @@ public class LifetimeManagerService extends Service {
                 UidStats u = stats.mUidArray.get(uid);
                 JSONObject js = new JSONObject();
 
-                if(u.getThrottle()==true) {
-                    knob.rateLimitForUid(uid);
-                    js.put("uid", u.getUid());
-                    js.put("packageName", u.packageName);
-                    js.put("rateLimit", false);
-                    js.put("wifiDataEnergy", u.getWifiDataEnergy());
-                }
+                //	if(u.getThrottle()==true) {
+                knob.rateLimitForUid(uid);
+                js.put("uid", u.getUid());
+                js.put("packageName", u.packageName);
+                js.put("rateLimit", false);
+                js.put("wifiDataEnergy", u.getWifiDataEnergy());
+                //js.put("throttle", u.getThrottle());
+                //	}
                 Log.i(TAG,js.toString());
             }
         }catch(JSONException e){
@@ -414,7 +441,7 @@ public class LifetimeManagerService extends Service {
             json.put("uptime", stats.mSystemStats.getUptime());
 
             if ( actualTimeLeft < (expectedTimeLeft + 600000) ) {
-                if (actualTimeLeft < (lifetimeHrs*60*60*1000)/3) {			//remember to get rid of 10
+                if (actualTimeLeft < (lifetimeHrs*60*60*1000)/4) {			//remember to get rid of 10
 
                     double hrs = Math.ceil(((double)actualTimeLeft / 3600000.0));
                     json.put("notify",true);
@@ -430,18 +457,18 @@ public class LifetimeManagerService extends Service {
                     mNotificationManager.notify(0,mBuilder);
 
                 }
-                stats = null;
+                Log.i(TAG, json.toString());
                 return true;
             }
 
-            Log.i(TAG, json.toString());
 
+            Log.i(TAG, json.toString());
 
         }catch (JSONException e) {
             // TODO Auto-generated catch block
             Log.i(TAGE, "Error @ willLifeEndSoon: "+e.getMessage());
         }
-        stats = null;
+
         return false;
     }
 
@@ -464,5 +491,60 @@ public class LifetimeManagerService extends Service {
             // TODO Auto-generated catch block
             Log.i(TAGE, "Error @ printLog: "+e.getMessage());
         }
+
     }
+
+    public class LocalBinder extends Binder {
+        LifetimeManagerService getService() {
+            return LifetimeManagerService.this;
+        }
+    }
+
+
+    public boolean flush() {
+//  write listMap to file
+        try {
+            FileOutputStream fos = openFileOutput(mapLocation, MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos);
+            os.writeObject(initialMap);
+            os.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public HashMap<String, Integer> readListMap() {
+        // Log.d(TAG, "read map from file: " + mapLocation);
+        try {
+            FileInputStream fis = openFileInput(mapLocation);
+            ObjectInputStream is = new ObjectInputStream(fis);
+            HashMap<String, Integer> map = (HashMap<String, Integer>) is.readObject();
+            is.close();
+            return map;
+        } catch (Exception e) {
+            Log.d("FAILEDXCV58", mapLocation + " no exists");
+            e.printStackTrace();
+        }
+        HashMap<String, Integer> tmpHashMap = new HashMap<String, Integer>();
+        tmpHashMap.put("soft", -1);
+        tmpHashMap.put("critical", -1);
+        tmpHashMap.put("lifetime", -1);
+        return tmpHashMap;
+    }
+
+    public void setParams(String key, int value){
+        this.initMap();
+        initialMap.put(key,value);
+        //Log.i(TAG, "key: "+key+" value: "+initialMap.get(key));
+    }
+
+    private void initMap() {
+        if (this.initialMap == null) {
+            initialMap = this.readListMap();
+        }
+    }
+
+
 }

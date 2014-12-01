@@ -39,11 +39,8 @@
             android:enabled="true" />
         <service android:name=".JoulerEnergyManageDaemon"
         android:enabled="true" />
-        <service android:name=".LifetimeManagerService">
-            <intent-filter>
-                <action android:name="com.xcv58.joulerenergymanager.LifetimeManagerService" />
-            </intent-filter>
-        </service>
+        <service android:name=".LifetimeManagerService"
+            android:enabled="true" />
     </application>
 
 </manifest>
