@@ -19,7 +19,10 @@
         \nThe app you choosed will get full energy supply, other apps will get lower energy supply.
     </string>
     <string name="description_lifetime">
-        LifeTime feature is coming soon.
+        LifeTime feature allows you to set the minimum number of hours you want your device to last in
+	full discharging cycle. \nAs additional parameters you are asked to enter the battery threshold
+	when the energy manager starts monitoring and the battery threshold when it aggressively tries
+	to control energy consumption of the whole device.
     </string>
 
 </resources>
