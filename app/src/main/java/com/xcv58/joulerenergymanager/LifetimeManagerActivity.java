@@ -4,9 +4,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -33,6 +36,29 @@ public class LifetimeManagerActivity extends Activity {
             + "cycle or in other words maximum number of hours between to full charging events when your device is charged to full 100%";
 
     static boolean service = false;
+    private boolean mBound = false;
+    private LifetimeManagerService mService;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            //Log.d(TAG, "ServiceConnection");
+            LifetimeManagerService.LocalBinder binder = (LifetimeManagerService.LocalBinder) service;
+            mService = binder.getService();
+            mBound = true;
+            //Log.d(TAG, "bind service successful");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBound = false;
+
+        }
+
+    };
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,30 +131,12 @@ public class LifetimeManagerActivity extends Activity {
             description.setText("Lifetime hours are set incorrectly. It should be a value within 1 (hour) to 24 (hours)");
             return ;
         }
-        Intent intent = new Intent(getApplicationContext(), LifetimeManagerService.class);
-        intent.putExtra("soft_threshold", threshold1);
-        intent.putExtra("critical_threshold", threshold2);
-        intent.putExtra("lifetime", lifetime);
-        Log.i(TAG, "Service about to start");
-        if(service) {
-            stopService(new Intent(getApplicationContext(), LifetimeManagerService.class));
-            service = false;
 
-        }
-        if(!service) {
-            startService(intent);
-            service = true;
-        }
-        try {
-            JSONObject json = new JSONObject();
-            json.put("soft_threshold", threshold1);
-            json.put("critical_threshold", threshold2);
-            json.put("lifetime", lifetime);
-            Log.i(TAG, json.toString());
-        } catch (JSONException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        mService.setParams("soft", threshold1);
+        mService.setParams("critical", threshold2);
+        mService.setParams("lifetime", lifetime);
+        mService.flush();
+        startService(new Intent(this, LifetimeManagerService.class));
         //finish();
         bt.setBackgroundColor(Color.TRANSPARENT);
         bt.setClickable(false);
@@ -139,7 +147,39 @@ public class LifetimeManagerActivity extends Activity {
         super.onResume();
         bt.setBackgroundColor(Color.GRAY);
         bt.setClickable(true);
+        bindService(new Intent(this,LifetimeManagerService.class),mConnection,this.BIND_AUTO_CREATE);
     }
+
+
+    @Override
+    protected void onPause() {
+        //Log.d(TAG, "on Pause");
+        if(mService !=null)
+            mService.flush();
+        super.onPause();
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+
+    }
+
+    @Override
+    protected void onStop() {
+        //Log.d(TAG, "on Stop");
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mService.flush();
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
