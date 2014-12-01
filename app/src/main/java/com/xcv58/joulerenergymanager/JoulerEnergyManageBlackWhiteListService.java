@@ -334,8 +334,23 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        option = intent.getExtras().getInt(JoulerEnergyManageBlackWhiteListService.whichList);
-        Log.d(TAG, "Start service with " + ((option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? "black list" : "white list"));
+        Bundle bundle = intent.getExtras();
+        String startMode = null;
+        if (bundle != null) {
+            option = bundle.getInt(JoulerEnergyManageBlackWhiteListService.whichList);
+            if (option == BLACK_LIST_INTENT) {
+                startMode = BLACK;
+            }
+            if (option == WHITE_LIST_INTENT) {
+                startMode = WHITE;
+            }
+        }
+        if (startMode == null) {
+            Log.e(TAG, "UNKNOWN option, it's a bug");
+            startMode = "UNKNOWN";
+        }
+        Log.d(TAG, "Start service with: " + startMode);
+
         listMapLocation = (option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? BLACK_LIST_MAP : WHITE_LIST_MAP;
         listMap = readListMap();
         if (isWhiteList()) {
