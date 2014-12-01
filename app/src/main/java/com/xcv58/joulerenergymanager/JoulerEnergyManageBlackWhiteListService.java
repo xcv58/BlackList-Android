@@ -230,7 +230,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void resetPriority(int uid, String packagename) {
         if (!priorityMap.containsKey(uid)) {
-            int previousPriority = joulerPolicy.getPriority(uid);
+//            int previousPriority = joulerPolicy.getPriority(uid);
+            int previousPriority = 0;
             priorityMap.put(uid, previousPriority);
             joulerPolicy.resetPriority(uid, LOW_PRIORITY);
             Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
