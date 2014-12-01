@@ -94,7 +94,7 @@ public class LifetimeManagerService extends Service {
                 if(level != lastCheckedLevel) {
                     //Log.i(TAG, "battery level="+level+"lastCheckedLevel="+lastCheckedLevel);
                     if(level <= soft && level > critical) {
-                        if((lastCheckedLevel== -1) || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 3)) {
+                        if((lastCheckedLevel== -1) || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 4)) {
                             //loading statistics
                             load();
                             lastCheckedLevel = level;
@@ -131,7 +131,7 @@ public class LifetimeManagerService extends Service {
                         }
 
                     }else if(level <= critical) {
-                        if(lastCheckedLevel== -1 || lastCheckedLevel > level ) {
+                        if(lastCheckedLevel== -1 || (lastCheckedLevel > level && (lastCheckedLevel - level) >= 2)) {
                             //loading statistics
                             load();
                             boolean state = willLifeEndSoon(level);		//logs info
