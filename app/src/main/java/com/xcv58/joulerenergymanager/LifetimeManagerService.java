@@ -361,14 +361,16 @@ public class LifetimeManagerService extends Service {
                     if(u.getUid() < 10000)
                         continue;
                     if(u.getAudioEnergy() == 0.0 && u.getWifiDataEnergy() > 0.0 && u.getThrottle() == false) {
-                        rateLimitedUids.add(u.getUid());
-                        knob.rateLimitForUid(u.getUid());
-                        js.put("uid", u.getUid());
-                        js.put("packageName", u.packageName);
-                        js.put("rateLimit", true);
-                        js.put("wifiDataEnergy", u.getWifiDataEnergy());
-                        //	js.put("throttle", u.getThrottle());
-                        Log.i(TAG,js.toString());
+                        if (rateLimitedUids.isEmpty() || !rateLimitedUids.contains(u.getUid())) {
+                            rateLimitedUids.add(u.getUid());
+                            knob.rateLimitForUid(u.getUid());
+                            js.put("uid", u.getUid());
+                            js.put("packageName", u.packageName);
+                            js.put("rateLimit", true);
+                            js.put("wifiDataEnergy", u.getWifiDataEnergy());
+                            //	js.put("throttle", u.getThrottle());
+                            Log.i(TAG,js.toString());
+                        }
                     }else if(u.getThrottle()){
                         Log.i(TAG,"setRateLimit: "+u.packageName+" :"+u.getUid());
                     }
