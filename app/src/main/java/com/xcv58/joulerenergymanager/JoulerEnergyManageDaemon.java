@@ -44,15 +44,15 @@ public class JoulerEnergyManageDaemon extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle bundle = intent.getExtras();
-        String startMode = null;
-        if (bundle != null) {
-            startMode = bundle.getString(StartupReceiver.START_MODE);
+        String startMode = "null intent";
+        if (intent != null) {
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                startMode = bundle.getString(StartupReceiver.START_MODE);
+            } else {
+                startMode = "null bundle";
+            }
         }
-        if (startMode == null) {
-            startMode = "UNKNOWN";
-        }
-//        Log.d(TAG, "Start daemon with mode: " + startMode);
         log(ONSTART + startMode);
 
         policyPreferences = getSharedPreferences(JOULER_POLICY, 0);
