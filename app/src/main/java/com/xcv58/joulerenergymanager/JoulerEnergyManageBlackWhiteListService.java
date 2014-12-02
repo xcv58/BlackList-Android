@@ -51,15 +51,16 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public static final String whichList = "Which List";
 
     private static final String ENTER_SAVE_MODE = "Enter save mode";
+    private static final String LEAVE_SAVE_MODE = "Leave save mode";
+    private static final String ON_START_COMMAND = "Enter save mode";
 
     public static final int LOW_BRIGHTNESS = 10;
     public static final int LOW_PRIORITY = 20;
-    private static final String LEAVE_SAVE_MODE = "Leave save mode";
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
     public static final String WHITE = "White";
     private static final String ENERGY_DETAIL = "Energy detail";
-    private int option;
+    private static int option;
     private String listMapLocation;
 
     private boolean brightnessSetted = false;
@@ -254,7 +255,9 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         try {
             json.put(key, value);
             json.put(WHICH_LIST, (isBlackList() ? BLACK : WHITE));
-            json.put(ENERGY_DETAIL, getJsonDetail());
+            if (!key.equals(ON_START_COMMAND)) {
+                json.put(ENERGY_DETAIL, getJsonDetail());
+            }
         } catch (JSONException e1) {
             e1.printStackTrace();
         }
@@ -334,22 +337,21 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Bundle bundle = intent.getExtras();
-        String startMode = null;
-        if (bundle != null) {
-            option = bundle.getInt(JoulerEnergyManageBlackWhiteListService.whichList);
-            if (option == BLACK_LIST_INTENT) {
-                startMode = BLACK;
-            }
-            if (option == WHITE_LIST_INTENT) {
-                startMode = WHITE;
+        String startMode = "null intent";
+        if (intent != null) {
+            Bundle bundle = intent.getExtras();
+            if (bundle == null) {
+                startMode = "null bundle";
+            } else {
+                option = bundle.getInt(JoulerEnergyManageBlackWhiteListService.whichList);
+                if (option == BLACK_LIST_INTENT) {
+                    startMode = BLACK;
+                } else if (option == WHITE_LIST_INTENT) {
+                    startMode = WHITE;
+                }
             }
         }
-        if (startMode == null) {
-            Log.e(TAG, "UNKNOWN option, it's a bug");
-            startMode = "UNKNOWN";
-        }
-//        Log.d(TAG, "Start service with: " + startMode);
+        log(ON_START_COMMAND, startMode);
 
         listMapLocation = (option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? BLACK_LIST_MAP : WHITE_LIST_MAP;
         listMap = readListMap();
