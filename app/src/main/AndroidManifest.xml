@@ -35,6 +35,8 @@
             </intent-filter>
         </receiver>
 
+        <service android:name=".DefaultManagerService"
+            android:enabled="true" />
         <service android:name=".JoulerEnergyManageBlackWhiteListService"
             android:enabled="true" />
         <service android:name=".JoulerEnergyManageDaemon"

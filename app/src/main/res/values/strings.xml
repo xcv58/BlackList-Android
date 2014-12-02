@@ -24,5 +24,11 @@
 	when the energy manager starts monitoring and the battery threshold when it aggressively tries
 	to control energy consumption of the whole device.
     </string>
+    <string name="notification_suffix">
+        " manager is running"
+    </string>
+    <string name="notification_title">
+        Jouler Energy Manager
+    </string>
 
 </resources>

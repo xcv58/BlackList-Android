@@ -59,7 +59,7 @@ public class JoulerEnergyManageDaemon extends Service {
         mChoice = policyPreferences.getString(JOULER_POLICY, DEFAULT_POLICY);
         this.startServiceForChoice();
 
-        return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -106,7 +106,7 @@ public class JoulerEnergyManageDaemon extends Service {
 //        Log.d(MainActivity.TAG, "Stop service: " + mChoice);
         log(STOP + mChoice);
         if (mChoice.equals(MainActivity.DEFAULT)) {
-            // do nothing because default
+            stopService(new Intent(getBaseContext(), DefaultManagerService.class));
         }
         if (mChoice.equals(MainActivity.BLACK_LIST)) {
             stopService(new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class));
@@ -123,6 +123,9 @@ public class JoulerEnergyManageDaemon extends Service {
 //        Log.d(MainActivity.TAG, "Start service: " + mChoice);
         log(START + mChoice);
         Intent intent = null;
+        if (mChoice.equals(MainActivity.DEFAULT)) {
+            intent = new Intent(getBaseContext(), DefaultManagerService.class);
+        }
         if (mChoice.equals(MainActivity.BLACK_LIST)) {
             intent = new Intent(getBaseContext(), JoulerEnergyManageBlackWhiteListService.class);
             intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT);

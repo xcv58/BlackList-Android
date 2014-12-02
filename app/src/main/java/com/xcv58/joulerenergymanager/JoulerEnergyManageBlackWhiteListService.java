@@ -1,5 +1,7 @@
 package com.xcv58.joulerenergymanager;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,6 +20,8 @@ import android.os.JoulerPolicy;
 import android.os.Parcel;
 import android.provider.Settings;
 import android.util.Log;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.NotificationCompat;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -67,6 +71,9 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private int previousBrightness;
     private int previousBrightnessMode;
     private HashMap<Integer, Integer> priorityMap;
+
+    private static final int notificationId = 1;
+    private NotificationCompat.Builder notificationBuilder;
 
     private JoulerPolicy joulerPolicy;
     private JoulerStats joulerStats;
@@ -313,6 +320,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        foreground();
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_RESUME_ACTIVITY);
         intentFilter.addAction(Intent.ACTION_PAUSE_ACTIVITY);
@@ -353,6 +362,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         }
         log(ON_START_COMMAND, startMode);
 
+        updateNotification();
         listMapLocation = (option == JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT) ? BLACK_LIST_MAP : WHITE_LIST_MAP;
         listMap = readListMap();
         if (isWhiteList()) {
@@ -360,7 +370,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             putAllNonLuncherInList();
             putAllLuncherInList();
         }
-        return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
     }
 
     @Override
@@ -373,6 +383,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopForeground();
         unregisterReceiver(broadcastReceiver);
         unregisterReceiver(screenReceiver);
         unregisterReceiver(onBatteryChange);
@@ -393,6 +404,29 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             return false;
         }
         return listMap.get(packageName) == 1;
+    }
+
+    private void foreground() {
+        notificationBuilder = new NotificationCompat.
+                Builder(getBaseContext())
+                .setSmallIcon(R.drawable.notification_icon);
+        startForeground(notificationId, notificationBuilder.build());
+        return;
+    }
+
+    private void updateNotification() {
+        Intent intent = new Intent(getBaseContext(), BlackWhiteListActivity.class);
+        intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, option);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        notificationBuilder.setContentIntent(pendingIntent)
+                .setContentTitle(getResources().getString(R.string.notification_title))
+                .setContentText((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST) + getResources().getString(R.string.notification_suffix));
+        startForeground(notificationId, notificationBuilder.build());
+    }
+
+    private void stopForeground() {
+        stopForeground(true);
     }
 
     private void putAllNonLuncherInList() {

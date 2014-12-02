@@ -139,7 +139,9 @@ public class MainActivity extends Activity {
         String option = (String) button.getText();
         Intent intent = null;
         if (option.equals(DEFAULT)) {
-            Toast.makeText(getBaseContext(), "Default policy set successfully", Toast.LENGTH_SHORT).show();
+            intent = new Intent(this, DefaultManagerService.class);
+            startService(intent);
+            return;
         } else if (option.equals(BLACK_LIST)) {
             intent = new Intent(this, BlackWhiteListActivity.class);
             intent.putExtra(JoulerEnergyManageBlackWhiteListService.whichList, JoulerEnergyManageBlackWhiteListService.BLACK_LIST_INTENT);

@@ -16,6 +16,7 @@ import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.Notification.Builder;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,6 +32,7 @@ import android.os.Parcel;
 import android.os.RemoteException;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class LifetimeManagerService extends Service {
@@ -40,6 +42,9 @@ public class LifetimeManagerService extends Service {
     final static String mapLocation = "LifetimeParameters";
     final static int defaultCpuFreq = 2265600;
     static int defaultBrightness;
+
+    private static final int notificationId = 1;
+    private NotificationCompat.Builder notificationBuilder;
 
     static int soft = -1;
     static int critical = -1;
@@ -219,11 +224,12 @@ public class LifetimeManagerService extends Service {
         brightness = defaultBrightness;
         IntentFilter intent1 = new IntentFilter();
         intent1.addAction(Intent.ACTION_BATTERY_CHANGED);
-        registerReceiver(onBatteryChange,intent1);
+        registerReceiver(onBatteryChange, intent1);
         IntentFilter intent2 = new IntentFilter();
         intent2.addAction(Intent.ACTION_SCREEN_ON);
         intent2.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(screenReceiver,intent2);
+        foreground();
     }
 
     @Override
@@ -255,7 +261,7 @@ public class LifetimeManagerService extends Service {
 
 
         printLog();
-        return super.onStartCommand(intent, flags, startId);
+        return START_REDELIVER_INTENT;
 
     }
 
@@ -270,7 +276,25 @@ public class LifetimeManagerService extends Service {
         unregisterReceiver(screenReceiver);
         unregisterReceiver(onBatteryChange);
         flush();
+        stopForeground();
+        super.onDestroy();
+    }
 
+    private void foreground() {
+        Intent intent = new Intent(getBaseContext(), LifetimeManagerActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getBaseContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        notificationBuilder = new NotificationCompat.Builder(getBaseContext())
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentTitle(getResources().getString(R.string.notification_title))
+                .setContentText(MainActivity.LIFE_TIME + getResources().getString(R.string.notification_suffix));
+        startForeground(notificationId, notificationBuilder.build());
+        return;
+    }
+
+    private void stopForeground() {
+        stopForeground(true);
     }
 
     private void setDefault() {
