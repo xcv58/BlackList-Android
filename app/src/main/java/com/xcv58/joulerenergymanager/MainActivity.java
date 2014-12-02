@@ -134,9 +134,13 @@ public class MainActivity extends Activity {
     }
 
     public void enterSetting(View v) {
+        if (v == null) {
+            Log.e(TAG, "get null View from button of MainActivity");
+            return;
+        }
         button = (Button) v;
 //        Log.d(TAG, "click" + button.getText());
-        String option = (String) button.getText();
+        String option = button.getText().toString();
         Intent intent = null;
         if (option.equals(DEFAULT)) {
             intent = new Intent(this, DefaultManagerService.class);
