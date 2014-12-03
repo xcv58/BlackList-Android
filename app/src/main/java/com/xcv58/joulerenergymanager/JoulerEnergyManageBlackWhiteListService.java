@@ -1,6 +1,5 @@
 package com.xcv58.joulerenergymanager;
 
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,17 +10,14 @@ import android.content.IntentFilter;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.DropBoxManager;
 import android.os.IBinder;
 import android.os.JoulerPolicy;
 import android.os.Parcel;
 import android.provider.Settings;
 import android.util.Log;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.NotificationCompat;
 
 import java.io.FileInputStream;
@@ -37,6 +33,7 @@ import java.util.Map;
 import android.os.JoulerStats;
 import android.os.JoulerStats.UidStats;
 import android.os.RemoteException;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,10 +69,10 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private static final String TOTAL_FG_CONSUMPTION_NOT_IN_LIST = "Total fg consumption not in list";
     private static final String TOTAL_BG_CONSUMPTION_NOT_IN_LIST = "Total bg consumption not in list";
 
-    public static final int LOW_BRIGHTNESS = 10;
-    public static final int LOW_PRIORITY = 20;
-    public static final double MAX_THRESHOLD = 0.1;
-    public static final double MIN_THRESHOLD = 0.01;
+//    public static final int LOW_BRIGHTNESS = 10;
+//    public static final int LOW_PRIORITY = 20;
+    public static final double MAX_THRESHOLD = 0.8;
+    public static final double MIN_THRESHOLD = 0.2;
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
     public static final String WHITE = "White";
@@ -83,12 +80,11 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private static int option;
     private String listMapLocation;
 
-    private boolean brightnessSetted = false;
-    private int previousBrightness;
-    private int previousBrightnessMode;
+//    private boolean brightnessSetted = false;
     private HashMap<Integer, Integer> priorityMap;
 
     private static final int notificationId = 1;
+    private static final int BRIGHT_NOTIFICATION_ID = 2;
     private NotificationCompat.Builder notificationBuilder;
 
     private BlackWhiteListMetaData metaData;
@@ -178,6 +174,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     meanNotInList = totalNotInList / numNotINList;
                 }
                 double ratio = meanInList / meanNotInList;
+                makeNotification("Battery Level change", "Level: " + level + ", ratio: " + ratio);
                 if (!isBlackList()) {
                     ratio = meanNotInList / meanInList;
                 }
@@ -195,13 +192,14 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void punish() {
         int priority = metaData.getGlobalPriority();
+        makeNotification("Punish", "Punish priority: " + priority);
         if (priority == 20) {
             metaData.setGlobalPriority(priority + 1);
             // rateLimit
             setRateLimit();
         } else if (priority == 21) {
             // do nothing but put notification;
-            notify((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use too much energy" : "Apps not in WhiteList use too much energy"));
+            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use too much energy" : "Apps not in WhiteList use too much energy"));
         } else {
             priority++;
             metaData.setGlobalPriority(priority);
@@ -212,13 +210,14 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void forgive() {
         int priority = metaData.getGlobalPriority();
+        makeNotification("Forgive", "Forgive priority: " + priority);
         if (priority == 21) {
             // rateLimit
             metaData.setGlobalPriority(priority - 1);
             restoreRateLimit();
         } else if (priority == 0) {
             // do nothing but put notification;
-            notify((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use few energy" : "Apps not in WhiteList use few energy"));
+            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use few energy" : "Apps not in WhiteList use few energy"));
         } else {
             priority--;
             metaData.setGlobalPriority(priority);
@@ -403,7 +402,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             joulerPolicy.rateLimitForUid(uid);
             metaData.setRateLimit(packagename);
         }
-        setBrightness(LOW_BRIGHTNESS);
+        setBrightness();
 //        setPriority(uid, packagename);
     }
 
@@ -417,17 +416,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         }
         this.resetBrightness();
         setPriorityForAll();
-    }
-
-    private void setPriority(int uid, String packagename) {
-        if (!priorityMap.containsKey(uid)) {
-//            int previousPriority = joulerPolicy.getPriority(uid);
-            int previousPriority = 0;
-            priorityMap.put(uid, previousPriority);
-            joulerPolicy.resetPriority(uid, LOW_PRIORITY);
-//            Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
-        }
-        return;
     }
 
     private void setPriorityForAll() {
@@ -482,43 +470,46 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
 
-    private void setBrightness(int brightness) {
-        if (brightnessSetted) {
+    private void setBrightness() {
+        if (metaData.isBrightnessSet()) {
             return;
         }
+
         try {
-            previousBrightness = android.provider.Settings.System.getInt(
+            int previousBrightness = android.provider.Settings.System.getInt(
                     getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
-            previousBrightnessMode = android.provider.Settings.System.getInt(
+            int previousBrightnessMode = android.provider.Settings.System.getInt(
                     getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS_MODE);
+            metaData.setPreviousBrightness(previousBrightness, previousBrightnessMode);
 //            Log.d(TAG, "Previous brightness is: " + previousBrightness + ". Mode is: " + previousBrightnessMode);
         } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
         }
 
 //        Log.d(TAG, "Set brightness to: " + brightness);
+        makeNotification("Brightness", metaData.getPreviousBrightness() + "->" + metaData.getLowBrightness(), BRIGHT_NOTIFICATION_ID);
         android.provider.Settings.System.putInt(getContentResolver(),
                 android.provider.Settings.System.SCREEN_BRIGHTNESS,
-                brightness);
+                metaData.getLowBrightness());
         android.provider.Settings.System.putInt(getContentResolver(),
                 Settings.System.SCREEN_BRIGHTNESS_MODE,
                 Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
-        brightnessSetted = true;
+        metaData.setBrightness();
     }
 
     private void resetBrightness() {
-        if (!brightnessSetted) {
+        if (!metaData.isBrightnessSet()) {
             return;
         }
 //
 //         (previousBrightnessMode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC ? "auto" : "manual"));
         android.provider.Settings.System.putInt(getContentResolver(),
                 android.provider.Settings.System.SCREEN_BRIGHTNESS,
-                previousBrightness);
+                metaData.getPreviousBrightness());
         android.provider.Settings.System.putInt(getContentResolver(),
                 Settings.System.SCREEN_BRIGHTNESS_MODE,
-                previousBrightnessMode);
-        brightnessSetted = false;
+                metaData.getPreviousBrightnessMode());
+        metaData.resetBrightness();
     }
 
     @Override
@@ -624,7 +615,12 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
 
-    private void notify(String title, String text) {
+    public void makeNotification(String title, String text) {
+        makeNotification(title,text, metaData.getNotificationId());
+        return;
+    }
+
+    public void makeNotification(String title, String text, int id) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.
                 Builder(getBaseContext())
                 .setSmallIcon(R.drawable.notification_icon)
@@ -632,7 +628,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                 .setContentText(text);
         NotificationManager mNotifyMgr =
                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        mNotifyMgr.notify(002, mBuilder.build());
+        mNotifyMgr.notify(id, mBuilder.build());
         return;
     }
 

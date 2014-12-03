@@ -471,7 +471,7 @@ public class LifetimeManagerService extends Service {
                 if (actualTimeLeft < (lifetimeHrs*60*60*1000)/4) {			//remember to get rid of 10
 
                     double hrs = Math.ceil(((double)actualTimeLeft / 3600000.0));
-                    json.put("notify",true);
+                    json.put("makeNotification",true);
                     json.put("notifyHrs", hrs);
                     Notification mBuilder =
                             new Notification.Builder(this)
