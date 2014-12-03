@@ -90,8 +90,7 @@ public class LifetimeManagerService extends Service {
 
 
             if(isCharging) {
-                if( level == 100)
-                    lastCheckedLevel = -1;
+                lastCheckedLevel = level;
                 resetPolicy();
 
             }
