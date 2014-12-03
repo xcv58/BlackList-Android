@@ -1,6 +1,7 @@
 package com.xcv58.joulerenergymanager;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -54,12 +55,27 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public static final int WHITE_LIST_INTENT = 2;
     public static final String whichList = "Which List";
 
+    private static final int NOT_INL_IST = 0;
+    private static final int IN_LIST = 1;
+    private static final int OUT_LIST = 2;
+
     private static final String ENTER_SAVE_MODE = "Enter save mode";
     private static final String LEAVE_SAVE_MODE = "Leave save mode";
     private static final String ON_START_COMMAND = "Enter save mode";
 
+    private static final String NUM_IN_LIST = "Num in list";
+    private static final String TOTAL_CONSUMPTION_IN_LIST = "Total consumption in list";
+    private static final String TOTAL_FG_CONSUMPTION_IN_LIST = "Total fg consumption in list";
+    private static final String TOTAL_BG_CONSUMPTION_IN_LIST = "Total bg consumption in list";
+    private static final String NUM_NOT_IN_LIST = "Num not in list";
+    private static final String TOTAL_CONSUMPTION_NOT_IN_LIST = "Total consumption not in list";
+    private static final String TOTAL_FG_CONSUMPTION_NOT_IN_LIST = "Total fg consumption not in list";
+    private static final String TOTAL_BG_CONSUMPTION_NOT_IN_LIST = "Total bg consumption not in list";
+
     public static final int LOW_BRIGHTNESS = 10;
     public static final int LOW_PRIORITY = 20;
+    public static final double MAX_THRESHOLD = 0.1;
+    public static final double MIN_THRESHOLD = 0.01;
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
     public static final String WHITE = "White";
@@ -74,6 +90,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private static final int notificationId = 1;
     private NotificationCompat.Builder notificationBuilder;
+
+    private BlackWhiteListMetaData metaData;
 
     private JoulerPolicy joulerPolicy;
     private JoulerStats joulerStats;
@@ -110,11 +128,13 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             } else if (action.equals(Intent.ACTION_PAUSE_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
 //                    Log.d(TAG, "Reset brightness, BLACK");
-                    resetBrightness(packageName);
+                    leaveMode(uid, packageName);
+//                    resetBrightness(packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
 //                    Log.d(TAG, "Reset brightness, WHITE");
-                    resetBrightness(packageName);
+                    leaveMode(uid, packageName);
+//                    resetBrightness(packageName);
                 }
             }
 //            Log.d(TAG, intent.getAction() + "," + System.currentTimeMillis() + ", " + sb.toString() + ", Energy usage: " + getEnergy(uid));
@@ -128,6 +148,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
             boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                     status == BatteryManager.BATTERY_STATUS_FULL;
+
             try {
                 JSONObject json = new JSONObject();
                 json.put("currentBatteryLevel", level);
@@ -138,8 +159,125 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             }catch (JSONException e) {
                 Log.i(TAG, "Error @ onBatteryChange receiver: "+e.getMessage());
             }
+
+            if (!metaData.isLevelChanged(level)) {
+                return;
+            }
+            JSONObject detail = getJsonDetail();
+            try {
+                double totalInList = detail.getDouble(TOTAL_CONSUMPTION_IN_LIST);
+                double totalNotInList = detail.getDouble(TOTAL_CONSUMPTION_NOT_IN_LIST);
+                int numInList = detail.getInt(NUM_IN_LIST);
+                int numNotINList = detail.getInt(NUM_NOT_IN_LIST);
+                double meanInList = 0.0;
+                double meanNotInList = 0.0;
+                if (numInList != 0 && totalInList > 0.0) {
+                    meanInList = totalInList / numInList;
+                }
+                if (numNotINList != 0 && totalNotInList > 0.0) {
+                    meanNotInList = totalNotInList / numNotINList;
+                }
+                double ratio = meanInList / meanNotInList;
+                if (!isBlackList()) {
+                    ratio = meanNotInList / meanInList;
+                }
+                if (ratio >= MAX_THRESHOLD) {
+                    punish();
+                }
+                if (ratio <= MIN_THRESHOLD) {
+                    forgive();
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
     };
+
+    private void punish() {
+        int priority = metaData.getGlobalPriority();
+        if (priority == 20) {
+            metaData.setGlobalPriority(priority + 1);
+            // rateLimit
+            setRateLimit();
+        } else if (priority == 21) {
+            // do nothing but put notification;
+            notify((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use too much energy" : "Apps not in WhiteList use too much energy"));
+        } else {
+            priority++;
+            metaData.setGlobalPriority(priority);
+            setPriorityForAll();
+        }
+        return;
+    }
+
+    private void forgive() {
+        int priority = metaData.getGlobalPriority();
+        if (priority == 21) {
+            // rateLimit
+            metaData.setGlobalPriority(priority - 1);
+            restoreRateLimit();
+        } else if (priority == 0) {
+            // do nothing but put notification;
+            notify((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use few energy" : "Apps not in WhiteList use few energy"));
+        } else {
+            priority--;
+            metaData.setGlobalPriority(priority);
+            setPriorityForAll();
+        }
+        return;
+    }
+
+    private void setRateLimit() {
+        metaData.setRateLimitFlag(true);
+        synchronized(joulerStats) {
+            try{
+                for(int i=0; i< joulerStats.mUidArray.size(); i++) {
+                    UidStats u = joulerStats.mUidArray.valueAt(i);
+                    if(u.getUid() < 10000)
+                        continue;
+                    if (outList(u.packageName)) {
+                        continue;
+                    }
+                    if ((isBlackList() && inList(u.packageName))
+                        || (!isBlackList() && !inList(u.packageName))) {
+                        if (!metaData.alreadySet(u.packageName)) {
+                            joulerPolicy.rateLimitForUid(u.getUid());
+                            metaData.setRateLimit(u.packageName);
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return;
+    }
+
+    private void restoreRateLimit() {
+        metaData.setRateLimitFlag(false);
+        synchronized(joulerStats) {
+            try{
+                for(int i=0; i< joulerStats.mUidArray.size(); i++) {
+                    UidStats u = joulerStats.mUidArray.valueAt(i);
+                    if(u.getUid() < 10000)
+                        continue;
+                    if (outList(u.packageName)) {
+                        continue;
+                    }
+                    if ((isBlackList() && inList(u.packageName))
+                            || (!isBlackList() && !inList(u.packageName))) {
+                        if (metaData.alreadySet(u.packageName)) {
+                            joulerPolicy.rateLimitForUid(u.getUid());
+                            metaData.removeRateLimit(u.packageName);
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return;
+    }
 
     BroadcastReceiver screenReceiver = new BroadcastReceiver() {
         @Override
@@ -166,14 +304,41 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             Parcel parcel = Parcel.obtain();
             parcel.unmarshall(bytes, 0, bytes.length);
             parcel.setDataPosition(0); // this is extremely important!
-            JoulerStats joulerStats = new JoulerStats(parcel);
+            joulerStats = new JoulerStats(parcel);
+            double fgConsumptionInlist = 0.0;
+            double bgConsumptionInlist = 0.0;
+            double fgConsumptionNotInlist = 0.0;
+            double bgConsumptionNotInlist = 0.0;
+            int numInlistPackage = 0;
+            int numNotInlistPackage = 0;
+
             for (int i = 0; i < joulerStats.mUidArray.size(); i++) {
                 UidStats u = joulerStats.mUidArray.valueAt(i);
                 if (u.packageName == null) {
                     continue;
                 }
                 json.put(u.packageName, getJSON(u));
+                if (outList(u.packageName)) {
+                    continue;
+                }
+                if (inList(u.packageName)) {
+                    numInlistPackage++;
+                    fgConsumptionInlist += u.getFgEnergy();
+                    bgConsumptionInlist += u.getBgEnergy();
+                } else {
+                    numNotInlistPackage++;
+                    fgConsumptionNotInlist += u.getFgEnergy();
+                    bgConsumptionNotInlist += u.getBgEnergy();
+                }
             }
+            json.put(NUM_IN_LIST, numInlistPackage);
+            json.put(TOTAL_CONSUMPTION_IN_LIST, fgConsumptionInlist + bgConsumptionInlist);
+            json.put(TOTAL_FG_CONSUMPTION_IN_LIST, fgConsumptionInlist);
+            json.put(TOTAL_BG_CONSUMPTION_IN_LIST, bgConsumptionInlist);
+            json.put(NUM_NOT_IN_LIST, numNotInlistPackage);
+            json.put(TOTAL_CONSUMPTION_NOT_IN_LIST, fgConsumptionNotInlist + bgConsumptionNotInlist);
+            json.put(TOTAL_FG_CONSUMPTION_NOT_IN_LIST, fgConsumptionNotInlist);
+            json.put(TOTAL_BG_CONSUMPTION_NOT_IN_LIST, bgConsumptionNotInlist);
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (JSONException e) {
@@ -198,6 +363,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             json.put("Frames", u.getFrame());
             json.put("Launches", u.getCount());
             json.put("Usage time", u.getUsageTime());
+            json.put("inList", inList(u.packageName));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -232,11 +398,28 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         log(ENTER_SAVE_MODE, packagename);
 //        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
 
+        joulerPolicy.resetPriority(uid, metaData.getGlobalPriority() - 10);
+        if (metaData.alreadySet(packagename)) {
+            joulerPolicy.rateLimitForUid(uid);
+            metaData.setRateLimit(packagename);
+        }
         setBrightness(LOW_BRIGHTNESS);
-        resetPriority(uid, packagename);
+//        setPriority(uid, packagename);
     }
 
-    private void resetPriority(int uid, String packagename) {
+    private void leaveMode(int uid, String packagename) {
+        log(LEAVE_SAVE_MODE, packagename);
+        if (metaData.isRateLimited()) {
+            if (!metaData.alreadySet(packagename)) {
+                joulerPolicy.rateLimitForUid(uid);
+                metaData.setRateLimit(packagename);
+            }
+        }
+        this.resetBrightness();
+        setPriorityForAll();
+    }
+
+    private void setPriority(int uid, String packagename) {
         if (!priorityMap.containsKey(uid)) {
 //            int previousPriority = joulerPolicy.getPriority(uid);
             int previousPriority = 0;
@@ -245,6 +428,33 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 //            Log.d(TAG, "Set priority " + uid + " " + packagename + " to " + LOW_PRIORITY + ". Previous priority: " + previousPriority);
         }
         return;
+    }
+
+    private void setPriorityForAll() {
+        if (joulerPolicy == null) {
+            joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
+        }
+        try {
+            byte[] bytes = joulerPolicy.getStatistics();
+            Parcel parcel = Parcel.obtain();
+            parcel.unmarshall(bytes, 0, bytes.length);
+            parcel.setDataPosition(0); // this is extremely important!
+            JoulerStats joulerStats = new JoulerStats(parcel);
+            for (int i = 0; i < joulerStats.mUidArray.size(); i++) {
+                UidStats u = joulerStats.mUidArray.valueAt(i);
+                if (outList(u.packageName)) {
+                    continue;
+                }
+                if (isBlackList() && inList(u.packageName)) {
+                    joulerPolicy.resetPriority(u.getUid(), metaData.getGlobalPriority());
+                }
+                if (!isBlackList() && !inList(u.packageName)) {
+                    joulerPolicy.resetPriority(u.getUid(), metaData.getGlobalPriority());
+                }
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private void resetPriority() {
@@ -296,11 +506,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         brightnessSetted = true;
     }
 
-    private void resetBrightness(String packagename) {
-        log(LEAVE_SAVE_MODE, packagename);
-        this.resetBrightness();
-    }
-
     private void resetBrightness() {
         if (!brightnessSetted) {
             return;
@@ -319,6 +524,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        metaData = new BlackWhiteListMetaData();
 
         foreground();
 
@@ -370,12 +577,14 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             putAllNonLuncherInList();
             putAllLuncherInList();
         }
+        setPriorityForAll();
         return START_REDELIVER_INTENT;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         this.initMap();
+        setPriorityForAll();
 //        Log.d(TAG, "onBind() executed");
         return mBinder;
     }
@@ -400,10 +609,31 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public boolean inList(String packageName) {
         this.initMap();
         if (!listMap.containsKey(packageName)) {
-            listMap.put(packageName, 0);
+            listMap.put(packageName, NOT_INL_IST);
             return false;
         }
-        return listMap.get(packageName) == 1;
+        return listMap.get(packageName) == IN_LIST;
+    }
+
+    private boolean outList(String packageName) {
+        this.initMap();
+        if (!listMap.containsKey(packageName)) {
+            return false;
+        }
+        return listMap.get(packageName) == OUT_LIST;
+    }
+
+
+    private void notify(String title, String text) {
+        NotificationCompat.Builder mBuilder = new NotificationCompat.
+                Builder(getBaseContext())
+                .setSmallIcon(R.drawable.notification_icon)
+                .setContentTitle(title)
+                .setContentText(text);
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.notify(002, mBuilder.build());
+        return;
     }
 
     private void foreground() {
@@ -446,10 +676,10 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         while (e.hasNext()) {
             Map.Entry<String, Integer> entry = (Map.Entry<String, Integer>) e.next();
             if (entry.getValue() == 0) {
-                listMap.put(entry.getKey(), 1);
+                listMap.put(entry.getKey(), OUT_LIST);
             }
         }
-        listMap.put(getPackageName(), 1);
+        listMap.put(getPackageName(), OUT_LIST);
     }
 
     private void putAllLuncherInList() {
@@ -459,7 +689,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         List<ResolveInfo> resolveInfoList = pm.queryIntentActivities(mainIntent, 0);
 
         for (ResolveInfo resolveInfo : resolveInfoList) {
-            listMap.put(resolveInfo.activityInfo.packageName, 1);
+            listMap.put(resolveInfo.activityInfo.packageName, OUT_LIST);
         }
     }
 
@@ -474,10 +704,12 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public void select(String packageName) {
         this.initMap();
         Integer num = listMap.get(packageName);
-        if (num == null || num == 0) {
-            listMap.put(packageName, 1);
-        } else {
-            listMap.put(packageName, 0);
+        if (num == null) {
+            listMap.put(packageName, NOT_INL_IST);
+        } else if (num == IN_LIST) {
+            listMap.put(packageName, NOT_INL_IST);
+        } else if (num == NOT_INL_IST) {
+            listMap.put(packageName, IN_LIST);
         }
         return;
     }
@@ -499,6 +731,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     public boolean flush() {
 //  write listMap to file
+        setPriorityForAll();
         try {
             FileOutputStream fos = openFileOutput(listMapLocation, MODE_PRIVATE);
             ObjectOutputStream os = new ObjectOutputStream(fos);
