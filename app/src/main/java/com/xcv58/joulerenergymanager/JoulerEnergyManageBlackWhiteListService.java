@@ -71,8 +71,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
 //    public static final int LOW_BRIGHTNESS = 10;
 //    public static final int LOW_PRIORITY = 20;
-    public static final double MAX_THRESHOLD = 1.0;
-    public static final double MIN_THRESHOLD = 0.2;
+    public static final double MAX_THRESHOLD = 0.9;
+    public static final double MIN_THRESHOLD = 0.4;
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
     public static final String WHITE = "White";
@@ -179,7 +179,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     meanNotInList = totalNotInList / numNotINList;
                 }
                 double ratio = meanInList / meanNotInList;
-                makeNotification("Battery Level change", "Level: " + level + ", ratio: " + ratio);
+//                makeNotification("Battery Level change", "Level: " + level + ", ratio: " + ratio);
                 if (!isBlackList()) {
                     ratio = meanNotInList / meanInList;
                 }
@@ -197,7 +197,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void punish() {
         int priority = metaData.getGlobalPriority();
-        makeNotification("Punish", "Punish priority: " + priority);
+//        makeNotification("Punish", "Punish priority: " + priority);
         if (priority == 20) {
             metaData.setGlobalPriority(priority + 1);
             // rateLimit
@@ -215,7 +215,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void forgive() {
         int priority = metaData.getGlobalPriority();
-        makeNotification("Forgive", "Forgive priority: " + priority);
+//        makeNotification("Forgive", "Forgive priority: " + priority);
         if (priority == 21) {
             // rateLimit
             metaData.setGlobalPriority(priority - 1);
@@ -400,7 +400,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void saveMode(int uid, String packagename) {
         log(ENTER_SAVE_MODE, packagename);
-        makeNotification(ENTER_SAVE_MODE, packagename);
+//        makeNotification(ENTER_SAVE_MODE, packagename);
 //        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
 
         joulerPolicy.resetPriority(uid, metaData.getGlobalPriority() - 10);
@@ -501,7 +501,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
         }
 
 //        Log.d(TAG, "Set brightness to: " + brightness);
-        makeNotification("Brightness", metaData.getPreviousBrightness() + "->" + metaData.getLowBrightness(), BRIGHT_NOTIFICATION_ID);
+//        makeNotification("Brightness", metaData.getPreviousBrightness() + "->" + metaData.getLowBrightness(), BRIGHT_NOTIFICATION_ID);
         android.provider.Settings.System.putInt(getContentResolver(),
                 android.provider.Settings.System.SCREEN_BRIGHTNESS,
                 metaData.getLowBrightness());
