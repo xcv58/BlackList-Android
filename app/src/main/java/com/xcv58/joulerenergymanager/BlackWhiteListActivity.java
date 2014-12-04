@@ -130,6 +130,7 @@ public class BlackWhiteListActivity extends ListActivity {
     @Override
     protected void onPause() {
         mService.flush();
+        mService.setPriorityForAll();
         super.onPause();
         log("Leave", getListMode());
         if (mBound) {

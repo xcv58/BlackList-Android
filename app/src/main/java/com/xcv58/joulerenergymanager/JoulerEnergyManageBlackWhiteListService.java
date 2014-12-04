@@ -29,11 +29,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import android.os.JoulerStats;
 import android.os.JoulerStats.UidStats;
 import android.os.RemoteException;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -71,7 +71,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
 //    public static final int LOW_BRIGHTNESS = 10;
 //    public static final int LOW_PRIORITY = 20;
-    public static final double MAX_THRESHOLD = 0.8;
+    public static final double MAX_THRESHOLD = 1.0;
     public static final double MIN_THRESHOLD = 0.2;
     public static final String WHICH_LIST = "List mode";
     public static final String BLACK = "Black";
@@ -82,6 +82,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
 //    private boolean brightnessSetted = false;
     private HashMap<Integer, Integer> priorityMap;
+    private static final int DEFAULT_PRIORITY = 0;
 
     private static final int notificationId = 1;
     private static final int BRIGHT_NOTIFICATION_ID = 2;
@@ -119,7 +120,9 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                 }
                 if (!isBlackList() && !inList(packageName)) {
 //                    Log.d(TAG, "Enter energy save mode by White rule, " + packageName);
-                    saveMode(uid, packageName);
+                    if (!outList(packageName)) {
+                        saveMode(uid, packageName);
+                    }
                 }
             } else if (action.equals(Intent.ACTION_PAUSE_ACTIVITY)) {
                 if (isBlackList() && inList(packageName)) {
@@ -128,8 +131,10 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 //                    resetBrightness(packageName);
                 }
                 if (!isBlackList() && !inList(packageName)) {
+                    if (!outList(packageName)) {
+                        leaveMode(uid, packageName);
+                    }
 //                    Log.d(TAG, "Reset brightness, WHITE");
-                    leaveMode(uid, packageName);
 //                    resetBrightness(packageName);
                 }
             }
@@ -239,7 +244,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     }
                     if ((isBlackList() && inList(u.packageName))
                         || (!isBlackList() && !inList(u.packageName))) {
-                        if (!metaData.alreadySet(u.packageName)) {
+                        if (!metaData.alreadySetRateLimit(u.packageName)) {
                             joulerPolicy.rateLimitForUid(u.getUid());
                             metaData.setRateLimit(u.packageName);
                         }
@@ -265,7 +270,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     }
                     if ((isBlackList() && inList(u.packageName))
                             || (!isBlackList() && !inList(u.packageName))) {
-                        if (metaData.alreadySet(u.packageName)) {
+                        if (metaData.alreadySetRateLimit(u.packageName)) {
                             joulerPolicy.rateLimitForUid(u.getUid());
                             metaData.removeRateLimit(u.packageName);
                         }
@@ -395,10 +400,12 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private void saveMode(int uid, String packagename) {
         log(ENTER_SAVE_MODE, packagename);
+        makeNotification(ENTER_SAVE_MODE, packagename);
 //        Log.d(TAG, "Enable saveMode, brightness: " + LOW_BRIGHTNESS);
 
         joulerPolicy.resetPriority(uid, metaData.getGlobalPriority() - 10);
-        if (metaData.alreadySet(packagename)) {
+        metaData.addForegroundPriority(uid);
+        if (metaData.alreadySetRateLimit(packagename)) {
             joulerPolicy.rateLimitForUid(uid);
             metaData.setRateLimit(packagename);
         }
@@ -409,16 +416,18 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     private void leaveMode(int uid, String packagename) {
         log(LEAVE_SAVE_MODE, packagename);
         if (metaData.isRateLimited()) {
-            if (!metaData.alreadySet(packagename)) {
+            if (!metaData.alreadySetRateLimit(packagename)) {
                 joulerPolicy.rateLimitForUid(uid);
                 metaData.setRateLimit(packagename);
             }
         }
         this.resetBrightness();
-        setPriorityForAll();
+        if (metaData.isForegroundPriority(uid)) {
+            joulerPolicy.resetPriority(uid, metaData.getGlobalPriority());
+        }
     }
 
-    private void setPriorityForAll() {
+    public void setPriorityForAll() {
         if (joulerPolicy == null) {
             joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
         }
@@ -430,14 +439,18 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             JoulerStats joulerStats = new JoulerStats(parcel);
             for (int i = 0; i < joulerStats.mUidArray.size(); i++) {
                 UidStats u = joulerStats.mUidArray.valueAt(i);
+                if (u.getUid() < 10000 || u.packageName == null || u.packageName.isEmpty()) {
+                    continue;
+                }
                 if (outList(u.packageName)) {
                     continue;
                 }
-                if (isBlackList() && inList(u.packageName)) {
+                if ((isBlackList() && inList(u.packageName)) || (!isBlackList() && !inList(u.packageName))) {
+                    Log.d(TAG, u.getUid() + ", " + u.packageName);
                     joulerPolicy.resetPriority(u.getUid(), metaData.getGlobalPriority());
-                }
-                if (!isBlackList() && !inList(u.packageName)) {
-                    joulerPolicy.resetPriority(u.getUid(), metaData.getGlobalPriority());
+                    if (!priorityMap.containsKey(u.getUid())) {
+                        priorityMap.put(u.getUid(), DEFAULT_PRIORITY);
+                    }
                 }
             }
         } catch (RemoteException e) {
@@ -451,6 +464,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             Map.Entry<Integer, Integer> entry = iterator.next();
             int uid = entry.getKey();
             int priority = entry.getValue();
+            Log.d(TAG, uid + ", ");
             joulerPolicy.resetPriority(uid, priority);
         }
     }
@@ -568,14 +582,12 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             putAllNonLuncherInList();
             putAllLuncherInList();
         }
-        setPriorityForAll();
         return START_REDELIVER_INTENT;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         this.initMap();
-        setPriorityForAll();
 //        Log.d(TAG, "onBind() executed");
         return mBinder;
     }
@@ -727,7 +739,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     public boolean flush() {
 //  write listMap to file
-        setPriorityForAll();
         try {
             FileOutputStream fos = openFileOutput(listMapLocation, MODE_PRIVATE);
             ObjectOutputStream os = new ObjectOutputStream(fos);

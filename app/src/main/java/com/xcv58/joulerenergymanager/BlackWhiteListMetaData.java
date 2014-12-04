@@ -1,13 +1,15 @@
 package com.xcv58.joulerenergymanager;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
 
 /**
  * Created by xcv58 on 12/3/14.
  */
 public class BlackWhiteListMetaData {
     private int globalPriority = 10;
-    private int level = 100;
+    private int level = -1;
 
     private boolean rateLimitFlag;
     private HashMap<String, Integer> map;
@@ -20,8 +22,11 @@ public class BlackWhiteListMetaData {
     private int previousBrightness;
     private int previousBrightnessMode;
 
+    private HashSet<Integer> foregroundPrioritySet;
+
     public BlackWhiteListMetaData() {
         map = new HashMap<String, Integer>();
+        foregroundPrioritySet = new HashSet<Integer>();
         rateLimitFlag = false;
         notificationId = 64;
         isBrightnessSet =false;
@@ -37,6 +42,9 @@ public class BlackWhiteListMetaData {
     }
 
     public boolean isLevelChanged(int newLevel) {
+        if (level == -1) {
+            level = newLevel;
+        }
         if (newLevel == level) {
             return false;
         }
@@ -44,7 +52,7 @@ public class BlackWhiteListMetaData {
         return true;
     }
 
-    public boolean alreadySet(String packagename) {
+    public boolean alreadySetRateLimit(String packagename) {
         Integer i = map.get(packagename);
         if (i == null) {
             return false;
@@ -100,5 +108,17 @@ public class BlackWhiteListMetaData {
 
     public int getLowBrightness() {
         return previousBrightness / Math.max((int)Math.log(previousBrightness) - 2, 1);
+    }
+
+    public void addForegroundPriority(int uid) {
+        foregroundPrioritySet.add(uid);
+    }
+
+    public boolean isForegroundPriority(int uid) {
+        if (foregroundPrioritySet.contains(uid)) {
+            foregroundPrioritySet.remove(uid);
+            return true;
+        }
+        return false;
     }
 }
