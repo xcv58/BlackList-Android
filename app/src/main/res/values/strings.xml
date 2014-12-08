@@ -9,7 +9,11 @@
     <string name="description">This is the description!</string>
     <string name="description_default">
         This provides basic energy management service.
-        </string>
+    </string>
+    <string name="wrong_platform">
+        You\'re using incorrect platform, lots of features cannot work.
+        \nPlease contact Jouler Energy Manager support.
+    </string>
     <string name="description_blacklist">
         BlackList will provide an app list, you can choose multiple apps.
         \nThe app you choosed will be punished to save energy.

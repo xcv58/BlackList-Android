@@ -429,8 +429,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
     public void setPriorityForAll() {
-        if (joulerPolicy == null) {
-            joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
+        if (!initJoulerPolicy()) {
+            return;
         }
         try {
             byte[] bytes = joulerPolicy.getStatistics();
@@ -534,26 +534,40 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
         foreground();
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Intent.ACTION_RESUME_ACTIVITY);
-        intentFilter.addAction(Intent.ACTION_PAUSE_ACTIVITY);
-        registerReceiver(broadcastReceiver, intentFilter);
-
-//        Log.d(TAG, "get JoulerPolicy");
-        joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
-        joulerStats = new JoulerStats();
 
         priorityMap = new HashMap<Integer, Integer>();
 
-        IntentFilter batteryChangeIntentFilter = new IntentFilter();
-        batteryChangeIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
-        registerReceiver(onBatteryChange, batteryChangeIntentFilter);
-        IntentFilter screenOnOffIntentFilter = new IntentFilter();
-        screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_ON);
-        screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(screenReceiver, screenOnOffIntentFilter);
+        //        Log.d(TAG, "get JoulerPolicy");
+
+        registerBunchReceiver();
 
 //        Log.d(TAG, "onCreate() executed");
+    }
+
+    private void registerBunchReceiver() {
+        if (initJoulerPolicy()) {
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(Intent.ACTION_RESUME_ACTIVITY);
+            intentFilter.addAction(Intent.ACTION_PAUSE_ACTIVITY);
+            registerReceiver(broadcastReceiver, intentFilter);
+
+            IntentFilter batteryChangeIntentFilter = new IntentFilter();
+            batteryChangeIntentFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
+            registerReceiver(onBatteryChange, batteryChangeIntentFilter);
+
+            IntentFilter screenOnOffIntentFilter = new IntentFilter();
+            screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_ON);
+            screenOnOffIntentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+            registerReceiver(screenReceiver, screenOnOffIntentFilter);
+        }
+    }
+
+    private void unregisterBunchReceiver() {
+        if (initJoulerPolicy()) {
+            unregisterReceiver(broadcastReceiver);
+            unregisterReceiver(screenReceiver);
+            unregisterReceiver(onBatteryChange);
+        }
     }
 
     @Override
@@ -596,9 +610,8 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     public void onDestroy() {
         super.onDestroy();
         stopForeground();
-        unregisterReceiver(broadcastReceiver);
-        unregisterReceiver(screenReceiver);
-        unregisterReceiver(onBatteryChange);
+        unregisterBunchReceiver();
+        clearNotification();
         flush();
         resetBrightness();
         resetPriority();
@@ -633,15 +646,25 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
     }
 
     public void makeNotification(String title, String text, int id) {
+        NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+        bigTextStyle.setBigContentTitle(title);
+        bigTextStyle.bigText(text);
+
         NotificationCompat.Builder mBuilder = new NotificationCompat.
                 Builder(getBaseContext())
                 .setSmallIcon(R.drawable.notification_icon)
-                .setContentTitle(title)
-                .setContentText(text);
+                .setStyle(bigTextStyle);
+
         NotificationManager mNotifyMgr =
                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mNotifyMgr.notify(id, mBuilder.build());
         return;
+    }
+
+    public void clearNotification() {
+        NotificationManager mNotifyMgr =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        mNotifyMgr.cancelAll();
     }
 
     private void foreground() {
@@ -756,6 +779,20 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             // Return this instance of LocalService so clients can call public methods
             return JoulerEnergyManageBlackWhiteListService.this;
         }
+    }
+
+    private boolean initJoulerPolicy() {
+        if (joulerPolicy == null) {
+            try {
+                joulerPolicy = (android.os.JoulerPolicy)getSystemService(JOULER_SERVICE);
+            } catch (NoClassDefFoundError error) {
+//                error.printStackTrace();
+                Log.e(TAG, "No android.os.JoulerPolicy class, please make sure you use right platform.");
+                makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), getString(R.string.wrong_platform), ENERGY_NOTIFICATION_ID);
+                return false;
+            }
+        }
+        return true;
     }
 
     private void initMap() {
