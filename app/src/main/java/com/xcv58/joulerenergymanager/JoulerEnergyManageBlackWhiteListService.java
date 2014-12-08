@@ -58,7 +58,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private static final String ENTER_SAVE_MODE = "Enter save mode";
     private static final String LEAVE_SAVE_MODE = "Leave save mode";
-    private static final String ON_START_COMMAND = "Enter save mode";
+    private static final String ON_START_COMMAND = "On start command";
 
     private static final String NUM_IN_LIST = "Num in list";
     private static final String TOTAL_CONSUMPTION_IN_LIST = "Total consumption in list";
@@ -86,6 +86,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
 
     private static final int notificationId = 1;
     private static final int BRIGHT_NOTIFICATION_ID = 2;
+    private static final int ENERGY_NOTIFICATION_ID = 2;
     private NotificationCompat.Builder notificationBuilder;
 
     private BlackWhiteListMetaData metaData;
@@ -204,7 +205,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             setRateLimit();
         } else if (priority == 21) {
             // do nothing but put notification;
-            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use too much energy" : "Apps not in WhiteList use too much energy"));
+            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use too much energy" : "Apps not in WhiteList use too much energy"), ENERGY_NOTIFICATION_ID);
         } else {
             priority++;
             metaData.setGlobalPriority(priority);
@@ -222,7 +223,7 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
             restoreRateLimit();
         } else if (priority == 0) {
             // do nothing but put notification;
-            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use few energy" : "Apps not in WhiteList use few energy"));
+            makeNotification((isBlackList() ? MainActivity.BLACK_LIST : MainActivity.WHITE_LIST), (isBlackList() ? "Apps in BlackList use few energy" : "Apps not in WhiteList use few energy"), ENERGY_NOTIFICATION_ID);
         } else {
             priority--;
             metaData.setGlobalPriority(priority);
@@ -446,7 +447,6 @@ public class JoulerEnergyManageBlackWhiteListService extends Service {
                     continue;
                 }
                 if ((isBlackList() && inList(u.packageName)) || (!isBlackList() && !inList(u.packageName))) {
-                    Log.d(TAG, u.getUid() + ", " + u.packageName);
                     joulerPolicy.resetPriority(u.getUid(), metaData.getGlobalPriority());
                     if (!priorityMap.containsKey(u.getUid())) {
                         priorityMap.put(u.getUid(), DEFAULT_PRIORITY);
